@@ -12,6 +12,10 @@ genres, themes, ratings, art and time-to-beat, then serves it as:
 - **An MCP server**, so Claude (or another MCP client) can answer "what should
   I play tonight?" from your actual library.
 
+![The library grid: each card shows the year, IGDB rating, time to beat and every store you have the game on](docs/screenshots/browse.png)
+
+![A game page: IGDB details, time to beat, your status and rating, where you can play it, and related picks](docs/screenshots/game-page.png)
+
 I built it for my own setup: a 2018 Mac mini running [Bazzite](https://bazzite.gg),
 plus an AYN Odin 2 Portal handheld (Android) that plays some Game Pass titles
 through DroidDeck. The Odin-specific parts are optional, and everything else
