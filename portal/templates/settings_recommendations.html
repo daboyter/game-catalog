@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendation settings — Game Library{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% macro excl_box(kind, value, n, checked) %}
+  <label class="excl-opt">
+    <input type="checkbox" name="exclude" value="{{ kind }}::{{ value }}" {{ 'checked' if checked }}>
+    <span>{{ value }}</span>
+    <span class="count" title="{{ n[0] }} store games · {{ n[1] }} ROM games">{{ n[0] }}{% if n[1] %} · {{ n[1] }} ROM{% endif %}</span>
+  </label>
+{% endmacro %}
+
+{% block content %}
+<div class="scans-page settings-page">
+  {% include "_settings_tabs.html" %}
+  <h1 class="detail-title">Recommendations</h1>
+  <p class="dim small">Tunes the pick rows on game and ROM pages: Tangents, Retro Picks, Modern Picks.
+    Changes apply on the next page you open. Browsing and filters are never affected.</p>
+
+  {% if notice %}<p class="scan-note">{{ notice }}</p>{% endif %}
+  {% if errors %}
+    <div class="scan-note warn">Not saved:
+      <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  {# keyword search is its own GET form; its input sits inside the main form below (form="kw-search") #}
+  <form id="kw-search" method="get" action="/settings/recommendations#keywords"></form>
+
+  <form method="post" action="/settings/recommendations" class="settings-form">
+    {% for heading, keys in sections_fields %}
+    <section class="detail-section">
+      <h2>{{ heading }}</h2>
+      {% for key in keys %}{% set f = fields[key] %}
+        {% if key in bool_keys %}
+        <label class="setting-row toggle">
+          <input type="checkbox" name="{{ key }}" {{ 'checked' if cfg[key] }}>
+          <span class="setting-label">{{ f[0] }}</span>
+          <span class="dim small">{{ f[1] }}</span>
+        </label>
+        {% else %}
+        <label class="setting-row">
+          <span class="setting-label">{{ f[0] }}</span>
+          <input type="number" name="{{ key }}" value="{{ cfg[key] }}" min="{{ f[4] }}" max="{{ f[5] }}" step="{{ f[6] }}" required>
+          <span class="dim small">{{ f[1] }} <span class="setting-default">(default {{ defaults[key] }})</span></span>
+        </label>
+        {% endif %}
+      {% endfor %}
+    </section>
+    {% endfor %}
+
+    <section class="detail-section">
+      <h2>Don't recommend</h2>
+      <p class="dim small">Games with any ticked label are left out of every pick row (store games and ROMs).
+        Counts: store games · ROM games with that label.</p>
+
+      <h3 class="excl-heading">Excluded now ({{ current_excl|length }})</h3>
+      <div class="excl-list">
+        {% for kind, value, n in current_excl %}
+          <span class="excl-kind dim">{{ kind_headings.get(kind, kind) }}:</span>{{ excl_box(kind, value, n, true) }}
+        {% else %}
+          <p class="dim small">Nothing is excluded.</p>
+        {% endfor %}
+      </div>
+      <p class="dim small">Untick to allow again. Tick more below, then save.</p>
+
+      {% for s in sections %}
+        <details class="excl-section" {{ 'open' if s.kind in ('perspective', 'tag') or (s.kind == 'keyword' and kw) }}
+                 {% if s.kind == 'keyword' %}id="keywords"{% endif %}>
+          <summary>{{ s.heading }}</summary>
+          {% if s.kind == 'keyword' %}
+            <div class="kw-search">
+              <input type="search" name="kw" value="{{ kw }}" form="kw-search" placeholder="Find keywords, e.g. horror, roguelite…">
+              <button type="submit" form="kw-search">Find</button>
+              <span class="dim small">Save your other changes first: finding reloads the page.</span>
+            </div>
+            {% if kw and not s["values"] %}<p class="dim small">No keywords contain "{{ kw }}".</p>{% endif %}
+          {% endif %}
+          <div class="excl-list">
+            {% for value, n in s["values"] %}{{ excl_box(s.kind, value, n, false) }}{% endfor %}
+          </div>
+        </details>
+      {% endfor %}
+    </section>
+
+    <div class="settings-actions">
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+
+  <form method="post" action="/settings/recommendations/reset" class="settings-actions">
+    <button type="submit">Reset everything to defaults</button>
+    <span class="dim small">Stored on bazzite in {{ settings_file }}; deleting that file also resets.</span>
+  </form>
+</div>
+{% endblock %}

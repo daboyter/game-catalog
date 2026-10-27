@@ -1,0 +1,13 @@
+[Unit]
+Description=Game catalog web portal (Flask)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/game-catalog-venv/bin/python3 %h/game-catalog/portal/app.py
+WorkingDirectory=%h/game-catalog/portal
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

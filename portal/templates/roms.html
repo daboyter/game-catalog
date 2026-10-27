@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_my.html" import my_badge %}
+{% from "_browse.html" import filter_sidebar, search_hidden_inputs, toolbar, chip_bar, pagination with context %}
+
+{% block title %}
+  {% if q %}{{ q }} — {% endif %}{% for c in chips[:3] %}{{ c.label }} · {% endfor %}ROMs — Game Library
+{% endblock %}
+
+{% block search_action %}/roms{% endblock %}
+{% block search_placeholder %}Search ROMs…{% endblock %}
+{% block search_hidden %}{{ search_hidden_inputs() }}{% endblock %}
+
+{% block sidebar %}{{ filter_sidebar(facets, n_active) }}{% endblock %}
+
+{% block content %}
+{{ toolbar(total, 'ROM', q or chips, sorts, sort) }}
+{{ chip_bar(chips, clear_url) }}
+{% if hidden_variants %}
+  <p class="dim variants-note">{{ hidden_variants }} game{{ 's' if hidden_variants != 1 }} only in Variants/ (no main-list copy) hidden. <a href="{{ variants_url }}">Show them</a></p>
+{% elif show_variants %}
+  <p class="dim variants-note">Showing games only in Variants/ too. <a href="{{ variants_url }}">Hide them</a></p>
+{% endif %}
+
+{% if roms %}
+<ul class="game-grid">
+  {% for r in roms %}
+  <li class="game-card rom-card">
+    <a href="/rom/{{ r.id }}">
+      {% if r.cover %}
+        <img class="game-cover rom-cover" src="/rom-media/{{ r.id }}/cover" alt="{{ r.title }}" loading="lazy">
+      {% else %}
+        <div class="game-cover-placeholder">{{ r.title[:2] }}</div>
+      {% endif %}
+      <div class="game-info">
+        <div class="game-title">{{ r.title }}</div>
+        <div class="game-meta">
+          {% if r.year %}<span>{{ r.year }}</span>{% endif %}
+          {% if r.rating %}<span title="ScreenScraper rating">★ {{ r.rating }}</span>{% endif %}
+          {% if r.favorite %}<span title="ES-DE favorite">♥</span>{% endif %}
+        </div>
+        <div class="game-badges">
+          {{ my_badge(r.my) }}
+          <span class="system-badge">{{ system_labels.get(r.system, r.system) }}</span>
+          {% if r.hack %}<span class="copies-badge" title="From Translations and Hacks/">translation / hack</span>{% endif %}
+          {% if r.versions|length > 1 %}<span class="copies-badge" title="Other files of this game: regions, languages, revisions">+{{ r.versions|length - 1 }} version{{ 's' if r.versions|length > 2 }}</span>{% endif %}
+        </div>
+      </div>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{{ pagination(page, total_pages) }}
+{% else %}
+<p class="empty">
+  No ROMs match.
+  {% if chips %}<a href="{{ clear_url }}">Clear the filters</a>{% endif %}
+</p>
+{% endif %}
+{% endblock %}

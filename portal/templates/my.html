@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_picks.html" import pick_card with context %}
+{% from "_my.html" import my_badge %}
+
+{% block title %}My games — Game Library{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% macro my_row(heading, rows, empty) %}
+<section class="detail-section series-section">
+  <h2>{{ heading }} <span class="dim series-all">{{ rows|length }}</span></h2>
+  {% if rows %}
+  <ul class="picks-row related-row my-row">
+    {% for kind, it in rows %}
+    <li class="pick">
+      {{ pick_card(it, kind) }}
+      <div class="pick-why">{{ my_badge(it.my) }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+    <p class="dim small">{{ empty }}</p>
+  {% endif %}
+</section>
+{% endmacro %}
+
+{% block content %}
+<div class="my-page">
+  <h1 class="detail-title">My games</h1>
+  <p class="dim small">Store games and ROMs you've marked or rated, from the "My status" box on each game's page.</p>
+
+  {{ my_row('In progress', in_progress, 'Nothing in progress. Use "▶ In progress" on a game\'s page.') }}
+  {{ my_row('Rated', rated, 'Nothing rated yet. Use "My rating" on a game\'s page.') }}
+  {{ my_row('Complete', complete, 'Nothing marked complete yet.') }}
+
+  <section class="detail-section series-section">
+    <h2>Suggested <span class="dim series-all">played in the last {{ recent_days }} days for {{ min_minutes }}+ minutes, not marked</span></h2>
+    {% if suggested %}
+    <ul class="picks-row related-row my-row">
+      {% for kind, it, day in suggested %}
+      <li class="pick">
+        {{ pick_card(it, kind) }}
+        <form method="post" action="/my/set" class="my-suggest compact">
+          <input type="hidden" name="kind" value="{{ kind }}">
+          <input type="hidden" name="id" value="{{ it.id }}">
+          <span class="dim">Played {{ day.strftime('%b %-d') }}</span>
+          <button type="submit" name="status" value="in_progress">▶ In progress</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="dim small">Nothing played recently that isn't marked yet.</p>
+    {% endif %}
+  </section>
+
+  {% if missing %}
+  <section class="detail-section">
+    <h2>Not in the library right now</h2>
+    <p class="dim small">Kept in case they come back (a store delisting, a ROM moved):
+      {% for e in missing %}{{ e.title }}{% if e.status %} ({{ e.status|replace('_', ' ') }}){% endif %}{% if e.rating %} ♥ {{ e.rating }}{% endif %}{{ ', ' if not loop.last }}{% endfor %}</p>
+  </section>
+  {% endif %}
+
+  <p class="dim small">Saved on bazzite in {{ my_file }} (outside the catalog database, so refreshes never touch it).</p>
+</div>
+{% endblock %}

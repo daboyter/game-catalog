@@ -1,0 +1,59 @@
+{# Recommendation rows for the detail pages (recommend.py).
+   kind: 'game' (store game: /game/<id>, cover URL) or 'rom' (ES-DE ROM: /rom/<id>, /rom-media cover).
+   Import "with context" so system_labels is available. #}
+
+{% macro pick_card(item, kind) %}
+  <a href="/{{ kind }}/{{ item.id }}" title="{{ item.title }}">
+    {% if item.cover %}
+      <img class="{{ 'rom-cover' if kind == 'rom' }}" src="{{ '/rom-media/' ~ item.id ~ '/cover' if kind == 'rom' else item.cover }}" alt="{{ item.title }}" loading="lazy">
+    {% else %}
+      <div class="game-cover-placeholder">{{ item.title[:2] }}</div>
+    {% endif %}
+    <div class="series-title">{{ item.title }}</div>
+    <div class="dim pick-meta">
+      {%- if kind == 'rom' %}{{ system_labels.get(item.system, item.system) }}{% endif %}
+      {%- if kind == 'rom' and item.year %} · {% endif %}
+      {%- if item.year %}{{ item.year }}{% endif -%}
+    </div>
+  </a>
+{% endmacro %}
+
+{# Same-kind surprising matches, random each visit; shuffle_url reloads with a new draw #}
+{% macro tangential_row(picks, kind, shuffle_url) %}
+{% if picks %}
+<section class="detail-section series-section picks-section">
+  <h2>
+    Tangents
+    {# a different ?shuffle= each time, so the browser really reloads (a same-URL #anchor link would only scroll) #}
+    <a class="dim series-all" href="{{ shuffle_url }}?shuffle={{ range(1, 1000000)|random }}#picks" id="picks" title="Draw another set">↻ Shuffle</a>
+  </h2>
+  <ul class="picks-row">
+    {% for p in picks %}
+    <li class="pick">
+      {{ pick_card(p.game, kind) }}
+      <div class="pick-why">{{ p.prefix }}: {{ p.because|join(' · ') }}</div>
+      {% if p.contrast %}<div class="pick-contrast">…but it's {{ p.contrast }}</div>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endmacro %}
+
+{# Retro / Modern Picks: same game or its remake first, then series, then shared tags/themes/genres #}
+{% macro related_row(heading, picks, kind) %}
+{% if picks %}
+<section class="detail-section series-section picks-section">
+  <h2>{{ heading }}</h2>
+  <ul class="picks-row related-row">
+    {% for p in picks %}
+    <li class="pick">
+      {{ pick_card(p.game, kind) }}
+      {% if p.label %}<div class="pick-why pick-label">{{ p.label }}</div>{% endif %}
+      {% if p.because %}<div class="pick-contrast">{{ 'Also: ' if p.label }}{{ p.because|join(' · ') }}</div>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endmacro %}

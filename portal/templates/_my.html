@@ -1,0 +1,44 @@
+{# The user's own play status and rating (mine.py, my_games.py).
+   my_box: the editor on game / ROM pages — plain POST forms, one click each.
+   my_badge: the small mark on grid cards. #}
+
+{% macro my_box(my, kind, id, played_recently) %}
+{% set status = (my or {}).get('status') %}
+{% set rating = (my or {}).get('rating') %}
+<section class="detail-section my-box" id="my">
+  <h2>My status</h2>
+  <form method="post" action="/my/set" class="my-form">
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="hidden" name="id" value="{{ id }}">
+    <button type="submit" name="status" value="in_progress" class="{{ 'on' if status == 'in_progress' }}">▶ In progress</button>
+    <button type="submit" name="status" value="complete" class="{{ 'on' if status == 'complete' }}">✓ Complete</button>
+    {% if status %}<button type="submit" name="status" value="none" class="my-clear">Unmark</button>{% endif %}
+  </form>
+  <form method="post" action="/my/set" class="my-form my-rating">
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="hidden" name="id" value="{{ id }}">
+    <span class="dim">My rating</span>
+    {% for n in range(1, 11) %}
+      <button type="submit" name="rating" value="{{ n }}" class="{{ 'on' if rating == n }}{{ ' below' if rating and n < rating }}"
+              title="Rate {{ n }}/10">{{ n }}</button>
+    {% endfor %}
+    {% if rating %}<button type="submit" name="rating" value="clear" class="my-clear">Clear</button>{% endif %}
+  </form>
+  {% if played_recently %}
+    <form method="post" action="/my/set" class="my-suggest">
+      <input type="hidden" name="kind" value="{{ kind }}">
+      <input type="hidden" name="id" value="{{ id }}">
+      <span>Played recently ({{ played_recently.strftime('%b %-d') }}). Mark as in progress?</span>
+      <button type="submit" name="status" value="in_progress">▶ Yes, in progress</button>
+    </form>
+  {% endif %}
+</section>
+{% endmacro %}
+
+{% macro my_badge(my) %}
+{% if my %}
+  {% if my.status == 'in_progress' %}<span class="my-badge" title="My status: in progress">▶</span>{% endif %}
+  {% if my.status == 'complete' %}<span class="my-badge done" title="My status: complete">✓</span>{% endif %}
+  {% if my.rating %}<span class="my-badge rated" title="My rating">♥ {{ my.rating }}</span>{% endif %}
+{% endif %}
+{% endmacro %}

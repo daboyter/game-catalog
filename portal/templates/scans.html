@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Scans — Game Library{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block head_extra %}
+  {% if running %}<meta http-equiv="refresh" content="10">{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="scans-page">
+  {% include "_settings_tabs.html" %}
+  <h1 class="detail-title">Scans</h1>
+
+  {% if started == 'busy' %}
+    <p class="scan-note warn">A refresh is already running — wait for it to finish.</p>
+  {% elif started %}
+    <p class="scan-note">Started: {{ dict(rescans)[started] }}. This page updates every 10 s while it runs.</p>
+  {% elif running %}
+    <p class="scan-note">A refresh is running now. This page updates every 10 s.</p>
+  {% endif %}
+
+  <section class="detail-section">
+    <h2>Rescan</h2>
+    <form method="post" action="/scans/rescan" class="rescan-form">
+      {% for value, label in rescans %}
+        <button type="submit" name="target" value="{{ value }}" class="{{ 'primary' if value == 'full' }}"
+                {{ 'disabled' if running }}
+                title="{{ 'Every importer, then matching and metadata (a few minutes)' if value == 'full'
+                         else 'Just this store, then matching and metadata for anything new' }}">
+          {{ label }}
+        </button>
+      {% endfor %}
+    </form>
+    <p class="dim small">Bought a game? Rescan its store: it imports, matches to IGDB and fetches its details in a minute or two.
+      GOG and Prime are refreshed by starting Heroic hidden for a few seconds (skipped if Heroic is already open).</p>
+  </section>
+
+  <section class="detail-section">
+    <h2>Last runs</h2>
+    <table class="scans-table">
+      <thead><tr><th>Scan</th><th>Status</th><th>Last run</th><th>Last success</th><th></th></tr></thead>
+      <tbody>
+      {% for j in jobs %}
+        <tr class="{{ 'problem' if j.problem }}">
+          <td>{{ j.label }}</td>
+          <td>
+            <span class="scan-status scan-{{ j.status }}">{{ j.status }}</span>
+            {% if j.problem %}<div class="scan-problem">⚠ {{ j.problem }}</div>{% endif %}
+          </td>
+          <td>{{ j.when }}{% if j.trigger %} <span class="dim">({{ j.trigger }}{% if j.duration %}, {{ j.duration }}{% endif %})</span>{% endif %}</td>
+          <td class="dim">{{ j.last_ok }}</td>
+          <td>
+            {% if j.log %}
+              <details class="scan-log" {{ 'open' if j.problem and j.status == 'failed' }}>
+                <summary>log</summary>
+                <pre>{{ j.log }}</pre>
+              </details>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="dim small">Logs: ~/.local/share/game-catalog/logs/&lt;run&gt;/ on bazzite (last 30 runs kept).</p>
+  </section>
+</div>
+{% endblock %}

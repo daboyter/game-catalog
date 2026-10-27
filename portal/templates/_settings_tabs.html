@@ -1,0 +1,5 @@
+{# Tabs of the ⚙ area: Scans (scans.py) and Recommendations (settings.py) #}
+<nav class="settings-tabs">
+  <a href="/scans" class="{{ 'active' if request.path == '/scans' }}">Scans</a>
+  <a href="/settings/recommendations" class="{{ 'active' if request.path.startswith('/settings/recommendations') }}">Recommendations</a>
+</nav>

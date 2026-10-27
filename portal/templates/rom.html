@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% from "_picks.html" import related_row, tangential_row with context %}
+{% from "_my.html" import my_box %}
+
+{% block title %}{{ title }} ({{ system_label }}) — Game Library{% endblock %}
+{% block search_action %}/roms{% endblock %}
+{% block search_placeholder %}Search ROMs…{% endblock %}
+{% block sidebar %}{# store-game counts don't belong on a ROM page #}{% endblock %}
+
+{% block content %}
+<div class="game-detail">
+  <div class="detail-cover-col">
+    {% if has_cover %}
+      <img class="detail-cover rom-cover" src="/rom-media/{{ rom.id }}/cover" alt="{{ title }}">
+    {% else %}
+      <div class="detail-cover-placeholder">{{ title[:2] }}</div>
+    {% endif %}
+  </div>
+
+  <div class="detail-info-col">
+    <h1 class="detail-title">{{ title }}</h1>
+
+    <div class="detail-meta-line">
+      <a href="/roms?system={{ rom.system|urlencode }}" title="All ROMs for this system">{{ system_label }}</a>
+      {% if folder == hacks_dir %}<a class="copies-badge" href="/roms?copies=Translation+%2F+hack" title="From Translations and Hacks/">translation / hack</a>{% endif %}
+      {% if folder == variants_dir %}<span class="copies-badge" title="A region/language copy in Variants/">variant</span>{% endif %}
+      {% if year %}
+        <a href="/roms?decade={{ (year // 10 * 10) ~ 's' }}" title="ROMs from this decade">{{ year }}</a>
+      {% endif %}
+      {% if rating %}<span class="detail-rating" title="ScreenScraper rating">★ {{ rating }}</span>{% endif %}
+      {% if rom.developer %}
+        <a href="/roms?developer={{ rom.developer|urlencode }}" title="More by this developer">{{ rom.developer }}</a>
+      {% endif %}
+      {% if rom.publisher and rom.publisher != rom.developer %}
+        <span><span class="dim">published by</span>
+          <a href="/roms?publisher={{ rom.publisher|urlencode }}" title="More from this publisher">{{ rom.publisher }}</a></span>
+      {% endif %}
+    </div>
+
+    <dl class="tag-rows">
+      {% if rom.genre %}
+        <dt>Genre</dt>
+        <dd>
+          <a class="genre-tag" href="/roms?genre={{ genre_top|urlencode }}" title="All {{ genre_top }} ROMs">{{ genre_top }}</a>
+          {% if rom.genre.split(' / ')|length > 1 %}<span class="dim">{{ rom.genre }}</span>{% endif %}
+        </dd>
+      {% endif %}
+      {% for key, heading, values in tag_rows %}
+        <dt>{{ heading }}</dt>
+        <dd>
+          {% for v in values %}
+            <a class="genre-tag" href="/roms?{{ key }}={{ v|urlencode }}{{ '&sort=oldest' if key == 'series' }}" title="All ROMs — {{ heading|lower }}: {{ v }}">{{ v }}</a>
+          {% endfor %}
+        </dd>
+      {% endfor %}
+      {% if rom.players %}
+        <dt>Players</dt>
+        <dd>
+          {% if players_bucket %}<a class="genre-tag" href="/roms?players={{ players_bucket|urlencode }}">{{ rom.players }}</a>
+          {% else %}{{ rom.players }}{% endif %}
+        </dd>
+      {% endif %}
+    </dl>
+
+    {% if rom.description %}
+      <p class="detail-desc">{{ rom.description }}</p>
+    {% endif %}
+
+    {% if has_screenshot %}
+      <img class="rom-screenshot" src="/rom-media/{{ rom.id }}/screenshot" alt="Screenshot of {{ title }}" loading="lazy">
+    {% endif %}
+
+    {{ my_box(my, my_kind, my_id, played_recently) }}
+
+    <section class="detail-section">
+      <h2>In ES-DE</h2>
+      <ul class="info-list rom-facts">
+        {% if rom.favorite %}<li>♥ Favorite</li>{% endif %}
+        <li>
+          {% if rom.playcount %}Played {{ rom.playcount }} time{{ 's' if rom.playcount != 1 }}{% if rom.lastplayed %}, last {{ rom.lastplayed[:4] }}-{{ rom.lastplayed[4:6] }}-{{ rom.lastplayed[6:8] }}{% endif %}
+          {% else %}Never played{% endif %}
+        </li>
+        <li><code class="store-ref">{{ rom.system }}/{{ rom.rom_path.removeprefix('./') }}</code></li>
+        <li class="dim">
+          {% if rom.igdb_id %}IGDB: {{ rom.igdb_id }}{% else %}No exact IGDB match{% endif %}
+          <span title="To fix or add a match, add a line to rom-igdb-pins.tsv: system, ROM path, igdb_id">(fix in rom-igdb-pins.tsv)</span>
+        </li>
+      </ul>
+      {% if versions %}
+        <h3 class="versions-heading">{{ versions|length }} versions of this game</h3>
+        <ul class="info-list versions-list">
+          {% for v in versions %}
+          <li>
+            {% if v.current %}<code class="store-ref">{{ v.path }}</code> <span class="dim">(this one)</span>
+            {% else %}<a href="/rom/{{ v.id }}"><code class="store-ref">{{ v.path }}</code></a>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if linked %}
+        <p class="playtime">Also in your store library: <a href="/game/{{ linked.id }}">{{ linked.canonical_title }}</a></p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+{{ tangential_row(tangential, 'rom', '/rom/' ~ rom.id) }}
+{{ related_row('Modern Picks', modern, 'game') }}
+
+<div class="back-link"><a href="javascript:history.back()">← Back</a></div>
+{% endblock %}

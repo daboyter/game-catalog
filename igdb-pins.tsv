@@ -1,0 +1,23 @@
+# Manual IGDB match pins — applied by merge.py BEFORE any searching.
+# A pinned game always gets exactly this IGDB record, and is skipped by
+# normal enrichment and --rematch, so the automatic picker can't undo it.
+#
+# Use when the automatic match is wrong (same-title collisions IGDB can't
+# disambiguate) or when there's no exact-title match but you know the game.
+#
+# Keyed on (store, store_id), NOT games.id — stable across DB rebuilds.
+# If a game is in several stores, one pin on any of its store rows is enough.
+# If the same game shows as two cards (different store titles), pin each
+# card's store entry to the same igdb_id and merge.py folds them into one.
+#
+# store:    steam | epic | gog | amazon | gamepass | lutris
+# store_id: that store's ID — shown as store:store_id under "Where to play"
+#           on the game's portal page (e.g. epic:Calluna)
+# igdb_id:  the IGDB game id to use. Easiest source: possible-matches.tsv
+#           (copy the whole line here). If the right game isn't listed there,
+#           ask Claude to look up the id from the title or igdb.com URL.
+# note:     optional human-readable explanation
+#
+# Keep your own copy at ~/.config/game-catalog/igdb-pins.tsv (the scripts read
+# that one when it exists); this repo copy is only the empty template.
+store	store_id	igdb_id	note

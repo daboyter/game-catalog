@@ -1,0 +1,8 @@
+# Python packages for the game catalog. Everything else (Steam, IGDB and
+# Game Pass requests, SQLite, XML) uses Python's standard library.
+# Versions are pinned to what runs on the author's box, so a fresh install
+# gets the same code that was tested.
+#   python3 -m venv ~/game-catalog-venv
+#   ~/game-catalog-venv/bin/pip install -r requirements.txt
+flask==3.1.3   # the web portal (portal/app.py)
+mcp==2.3.0     # the MCP server for Claude (mcp_server.py); skip it if you don't use one

@@ -1,0 +1,105 @@
+{# Shared pieces of the faceted grids (index.html for store games, roms.html for ROMs).
+   Data comes from browse.py: facets = build_facets(), chips = chips(). #}
+
+{% macro option_list(facet, options) %}
+  <ul>
+    {% for o in options %}
+    <li>
+      <a href="{{ toggle_url(facet.key, o.value) }}" class="facet-opt{{ ' active' if o.active }}"
+         rel="nofollow">
+        <span class="check" aria-hidden="true">{{ '☑' if o.active else '☐' }}</span>
+        {% if facet.key == 'store' %}
+          <span class="store-badge store-{{ o.value }}">{{ o.label }}</span>
+        {% elif facet.key == 'compat' %}
+          <span class="compat-dot compat-{{ o.value }}">●</span> {{ o.label }}
+        {% else %}
+          <span class="opt-label">{{ o.label }}</span>
+        {% endif %}
+        <span class="count">{{ o.count }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+{% endmacro %}
+
+{% macro filter_sidebar(facets, n_active) %}
+<aside class="sidebar has-filters">
+  <details class="filter-panel" id="filter-panel" open>
+    <summary>Filters{% if n_active %} ({{ n_active }}){% endif %}</summary>
+    <nav>
+      {% for facet in facets if facet.top %}
+      <details class="facet" {{ 'open' if facet.open }}>
+        <summary>
+          {{ facet.heading }}
+          {% if facet.n_active %}<span class="facet-active">{{ facet.n_active }}</span>{% endif %}
+        </summary>
+        {{ option_list(facet, facet.top) }}
+        {% if facet.more %}
+        <details class="facet-more">
+          <summary>Show {{ facet.more|length }} more</summary>
+          {{ option_list(facet, facet.more) }}
+        </details>
+        {% endif %}
+      </details>
+      {% endfor %}
+    </nav>
+  </details>
+</aside>
+<script>
+  // Phones: start with the filter panel collapsed so the grid is visible
+  if (window.matchMedia("(max-width: 640px)").matches) {
+    document.getElementById("filter-panel").removeAttribute("open");
+  }
+</script>
+{% endmacro %}
+
+{% macro search_hidden_inputs() %}
+  {# keep active filters and sort when searching #}
+  {% for k, v in current_params(drop=('q',)) %}
+    <input type="hidden" name="{{ k }}" value="{{ v }}">
+  {% endfor %}
+{% endmacro %}
+
+{% macro toolbar(total, noun, filtered, sorts, sort) %}
+<div class="toolbar">
+  <span class="result-count">
+    {{ '{:,}'.format(total) }} {{ noun }}{{ 's' if total != 1 }}{% if filtered %} found{% endif %}
+  </span>
+  <form class="sort-form" method="get" action="">
+    {% for k, v in current_params(drop=('sort',)) %}
+      <input type="hidden" name="{{ k }}" value="{{ v }}">
+    {% endfor %}
+    <label>Sort
+      <select name="sort" onchange="this.form.submit()">
+        {% for key, label in sorts.items() %}
+        <option value="{{ key }}" {{ 'selected' if key == sort }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <noscript><button type="submit">Go</button></noscript>
+  </form>
+</div>
+{% endmacro %}
+
+{% macro chip_bar(chips, clear_url) %}
+{% if chips %}
+<div class="chips">
+  {% for c in chips %}
+  <a class="chip" href="{{ c.url }}" title="Remove filter">
+    <span class="chip-heading">{{ c.heading }}:</span> {{ c.label }} <span aria-hidden="true">✕</span>
+  </a>
+  {% endfor %}
+  <a class="chip chip-clear" href="{{ clear_url }}">Clear all</a>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro pagination(page, total_pages) %}
+{% if total_pages > 1 %}
+<nav class="pagination">
+  {% if page > 1 %}<a href="{{ page_url(page - 1) }}">&larr; Prev</a>{% endif %}
+  <span>{{ page }} / {{ total_pages }}</span>
+  {% if page < total_pages %}<a href="{{ page_url(page + 1) }}">Next &rarr;</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_my.html" import my_badge %}
+{% from "_browse.html" import filter_sidebar, search_hidden_inputs, toolbar, chip_bar, pagination with context %}
+
+{% block title %}
+  {% if q %}{{ q }} — {% endif %}{% for c in chips[:3] %}{{ c.label }} · {% endfor %}Game Library
+{% endblock %}
+
+{% block search_hidden %}{{ search_hidden_inputs() }}{% endblock %}
+
+{% block sidebar %}{{ filter_sidebar(facets, n_active) }}{% endblock %}
+
+{% block content %}
+{{ toolbar(total, 'game', q or chips, sorts, sort) }}
+{{ chip_bar(chips, clear_url) }}
+
+{% if games %}
+<ul class="game-grid">
+  {% for g in games %}
+  <li class="game-card compat-border-{{ g.compat }}">
+    <a href="/game/{{ g.id }}">
+      {% if g.cover %}
+        <img class="game-cover" src="{{ g.cover }}" alt="{{ g.title }}" loading="lazy">
+      {% else %}
+        <div class="game-cover-placeholder">{{ g.title[:2] }}</div>
+      {% endif %}
+      <div class="game-info">
+        <div class="game-title">{{ g.title }}</div>
+        <div class="game-meta">
+          {% if g.year %}<span>{{ g.year }}</span>{% endif %}
+          {% if g.rating and g.rating_count >= 5 %}<span title="IGDB rating">★ {{ g.rating|round|int }}</span>{% endif %}
+          {% if g.ttb %}<span title="Time to beat">{{ g.ttb|hours }}</span>{% endif %}
+        </div>
+        <div class="game-badges">
+          {{ my_badge(g.my) }}
+          {% for s in g.stores %}
+          <span class="store-badge store-{{ s }}">{{ store_labels.get(s, s) }}</span>
+          {% endfor %}
+          {% if g.compat != 'untested' %}
+          <span class="compat-badge compat-{{ g.compat }}">{{ g.compat }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{{ pagination(page, total_pages) }}
+{% else %}
+<p class="empty">
+  No games match.
+  {% if chips %}<a href="{{ clear_url }}">Clear the filters</a>{% endif %}
+</p>
+{% endif %}
+{% endblock %}

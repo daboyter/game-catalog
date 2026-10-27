@@ -1,0 +1,10 @@
+# Manual IGDB matches for ES-DE ROMs, applied by match_roms.py on every run.
+# Use it when a ROM matched the wrong IGDB game, or none (the ROM page shows
+# the system, the ROM path and the current IGDB id).
+#
+# system: ES-DE folder (snesna, gb, …); rom_path: as in the gamelist, e.g.
+# ./Variants/Zombies (Europe).zip; igdb_id: from the game's IGDB page
+# (igdb.com → the game → "IGDB ID" in the sidebar). note is free text.
+# Keep your own copy at ~/.config/game-catalog/rom-igdb-pins.tsv (the scripts read
+# that one when it exists); this repo copy is only the empty template.
+system	rom_path	igdb_id	note

@@ -1,0 +1,17 @@
+# Games hidden from the catalog — dropped by the importers and deleted from
+# the database on every refresh, so they never show in the portal, picks or
+# the MCP server. Hiding here does NOT remove anything from the store account.
+#
+# Keyed on (store, store_id), NOT games.id — stable across DB rebuilds.
+# A game owned in several stores stays visible until every one of its store
+# entries is listed.
+#
+# store:    steam | epic | gog | amazon | gamepass | lutris
+#           (only the Heroic importer — epic, gog, amazon — skips them at
+#           import; rows from other stores are deleted right after)
+# store_id: shown as store:store_id under "Where to play" on the portal page
+# note:     optional
+#
+# Keep your own copy at ~/.config/game-catalog/hidden-games.tsv (the scripts read
+# that one when it exists); this repo copy is only the empty template.
+store	store_id	note

@@ -1,0 +1,16 @@
+# Store entries that aren't games: engines, tools, soundtracks, extras,
+# streaming services. not_games.py (every refresh) marks them
+# ownership.kind = 'launcher', so the portal, IGDB matching and the MCP
+# server skip them, like the Lutris launchers. Remove a line to bring the
+# entry back (its kind is restored on the next refresh).
+#
+# store_id may be a glob pattern (* and ?): UE_* = every Unreal Engine version.
+store	store_id	note
+epic	UE_*	Unreal Engine (every version, incl. Chaos builds)
+epic	08c5c041aa2c4fe08fbd87c08fb37c36	Football Manager 2024 Pre-game editor
+epic	7e9ca4940ed0427699f687f538d8f72d	Football Manager 2024 Resource archiver
+epic	AukSoundtrack	Q.U.B.E. 2 Soundtrack
+epic	5bf67f3153364181b54cb9e40ca7fa82	Death Stranding Content (extras)
+gog	1774891642	Cyberpunk 2077 & Phantom Liberty Goodies Collection
+epic	4f50a062a8c34a259e507260a0311163	Antstream Arcade (streaming service, not on IGDB)
+battlenet	codhq	Call of Duty HQ (the launcher hub for the recent Call of Duty games, not a game)
