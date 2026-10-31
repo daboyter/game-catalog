@@ -52,7 +52,7 @@ and DroidDeck open. USB was unreliable; Wi-Fi adb works well:
 Then merge (recheck wins), write `droiddeck-status.jsonl`, commit, and record
 the scan for the portal's Scans page:
 
-    ssh bazzite.local '~/game-catalog-venv/bin/python3 ~/game-catalog/runlog.py \
+    ssh ebonhawk.local '~/game-catalog-venv/bin/python3 ~/game-catalog/runlog.py \
         droiddeck ok <started-iso> <log> "<summary>" --run <stamp> --trigger mac'
 
 A full scan takes ~2.5 h + ~45 min for the recheck; don't use the Odin meanwhile.

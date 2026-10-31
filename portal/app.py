@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Game catalog web portal — http://bazzite.local:5000
+Game catalog web portal — http://ebonhawk.local:5000
 
 Usage (on bazzite):
     ~/game-catalog-venv/bin/python3 portal/app.py

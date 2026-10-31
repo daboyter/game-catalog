@@ -9,7 +9,7 @@ same job + run finishes, so a step that dies mid-way (killed, power loss)
 stays visible as "running" and the portal flags it as stuck.
 
 Also used for scans that run elsewhere, e.g. the DroidDeck scan on the Mac:
-    ssh bazzite.local '~/game-catalog-venv/bin/python3 ~/game-catalog/runlog.py droiddeck ok ...'
+    ssh ebonhawk.local '~/game-catalog-venv/bin/python3 ~/game-catalog/runlog.py droiddeck ok ...'
 """
 
 import argparse
