@@ -4,6 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Game Library{% endblock %}</title>
+  {# Home-screen icon. On an iPhone: Safari, Share, "Add to Home Screen". The
+     manifest and these tags make it open full screen, without Safari's bars,
+     under the name "Games". The picture is static/icon.svg (see its header
+     for how the PNGs are rebuilt). #}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Games">
+  <meta name="theme-color" content="#0f0f13">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   {% block head_extra %}{% endblock %}
 </head>

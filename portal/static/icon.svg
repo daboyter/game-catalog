@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  icon.svg: source for the home-screen icon (apple-touch-icon.png).
+  A white game controller on the portal's purple (the accent color in
+  style.css). The square is full-bleed on purpose: iPhones round the corners
+  themselves, and transparent areas would turn black.
+  To rebuild the PNGs after editing this file (rsvg-convert comes from
+  `brew install librsvg`), from the repo root:
+    rsvg-convert -w 180 -h 180 portal/static/icon.svg -o portal/static/apple-touch-icon.png
+    rsvg-convert -w 512 -h 512 portal/static/icon.svg -o portal/static/icon-512.png
+    rsvg-convert -w 32 -h 32 portal/static/icon.svg -o portal/static/favicon.png
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+  <rect width="180" height="180" fill="#7c6af7"/>
+  <!-- controller body with its two grips -->
+  <path d="M60 58 H120 C141 58 151 70 156 90 L163 121 C166 138 150 147 139 134 L125 117 H55
+           L41 134 C30 147 14 138 17 121 L24 90 C29 70 39 58 60 58 Z"
+        fill="#ffffff"/>
+  <!-- d-pad -->
+  <rect x="44" y="83" width="28" height="10" rx="2" fill="#7c6af7"/>
+  <rect x="53" y="74" width="10" height="28" rx="2" fill="#7c6af7"/>
+  <!-- four face buttons -->
+  <circle cx="122" cy="76" r="6.5" fill="#7c6af7"/>
+  <circle cx="135" cy="89" r="6.5" fill="#7c6af7"/>
+  <circle cx="109" cy="89" r="6.5" fill="#7c6af7"/>
+  <circle cx="122" cy="102" r="6.5" fill="#7c6af7"/>
+</svg>

@@ -1,0 +1,14 @@
+{
+  "name": "Game Library",
+  "short_name": "Games",
+  "description": "Every game across Steam, Heroic, Lutris, Game Pass and ES-DE",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#0f0f13",
+  "icons": [
+    {"src": "/static/apple-touch-icon.png", "sizes": "180x180", "type": "image/png"},
+    {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
