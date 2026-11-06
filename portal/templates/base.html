@@ -76,5 +76,7 @@
       {% block content %}{% endblock %}
     </main>
   </div>
+  {# Pull-to-refresh in the home-screen app (Safari tabs have their own). #}
+  <script src="{{ url_for('static', filename='refresh.js') }}" defer></script>
 </body>
 </html>
