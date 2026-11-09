@@ -519,18 +519,29 @@ a.genre-tag:hover { color: var(--text); border-color: var(--accent); }
 .my-page { max-width: 1100px; }
 
 /* Home page (home.html): Play next, then device and itch buttons with a pick row */
-.home { max-width: 1100px; }
-.home-section { margin-bottom: 2.2rem; scroll-margin-top: 70px; }   /* #for / #itch: clear the sticky header */
+.home { max-width: 1900px; }
+/* each section is a card; rows use the card's full width */
+.home-section {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 1rem 1.1rem 1.2rem; margin-bottom: 1rem;
+  scroll-margin-top: 70px;                                   /* #for / #itch: clear the sticky header */
+}
 .home-section h2 {
   font-size: .9rem; text-transform: uppercase; letter-spacing: .06em;
   color: var(--text-dim); margin-bottom: .7rem;
 }
-.home-row { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+/* one line per row: covers shrink to 104px to fit, then the row scrolls sideways */
+.home-row {
+  display: flex; gap: .85rem; max-width: none;
+  overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: .35rem;
+}
+.home-row .pick { flex: 1 0 104px; max-width: 150px; min-width: 0; scroll-snap-align: start; }
+.home-section > p:last-child, .home-row:last-child { margin-bottom: 0; }
 .choice-buttons { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .8rem; }
 .choice {
   display: inline-flex; align-items: center; gap: .45rem;
   padding: .55rem .9rem; border-radius: 10px; min-height: 44px;   /* thumb-sized */
-  background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text);
   font-size: .92rem; text-decoration: none;
 }
 .choice:hover { border-color: var(--accent); color: var(--text); }
@@ -543,7 +554,7 @@ a.genre-tag:hover { color: var(--text); border-color: var(--accent); }
 .find-form { display: flex; gap: .4rem; align-items: center; margin-bottom: .9rem; max-width: 520px; }
 .find-form input {
   flex: 1; min-width: 0; padding: .5rem .7rem; border-radius: 8px; min-height: 40px;
-  border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: .92rem;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: .92rem;
 }
 .find-form button {
   padding: .5rem .9rem; border-radius: 8px; min-height: 40px; border: none;
@@ -552,7 +563,8 @@ a.genre-tag:hover { color: var(--text); border-color: var(--accent); }
 .find-sub { font-size: .8rem; font-weight: 600; margin: 1.2rem 0 .6rem; color: var(--text); }
 .find-sub .dim { font-weight: 400; margin-left: .4rem; }
 @media (max-width: 640px) {
-  .home-section { scroll-margin-top: 150px; }                        /* taller header on a phone */
-  .home-row { grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+  .home-section { scroll-margin-top: 150px; padding: .8rem .75rem 1rem; }   /* taller header on a phone */
+  .home-row { gap: .6rem; }
+  .home-row .pick { flex: 0 0 31%; max-width: none; }          /* three across, swipe for more */
   .choice { padding: .5rem .75rem; font-size: .88rem; }
 }

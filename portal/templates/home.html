@@ -13,7 +13,8 @@
   {% for r in rows %}
   <li class="pick">
     {{ pick_card(r.game, r.kind) }}
-    <div class="pick-why">{{ r.why }}</div>
+    {% if r.why %}<div class="pick-why">{{ r.why }}</div>{% endif %}
+    {% if r.also %}<div class="pick-contrast">{{ r.also }}</div>{% endif %}
   </li>
   {% endfor %}
 </ul>
@@ -54,12 +55,23 @@
 {% block content %}
 <div class="home">
   <section class="home-section">
-    <h2>Play next</h2>
+    <h2>In progress</h2>
+    {% if in_progress %}
+      {{ pick_row(in_progress) }}
+    {% else %}
+      <p class="dim small">Nothing marked. Use "▶ In progress" on a game's page.</p>
+    {% endif %}
+  </section>
+
+  <section class="home-section" id="next">
+    <h2>Play next
+      <a class="dim series-all" href="{{ request.full_path.rstrip('?') }}#next" onclick="location.reload(); return false;" title="Draw another set">↻ Shuffle</a>
+    </h2>
     {% if play_next %}
       {{ pick_row(play_next) }}
     {% else %}
-      <p class="dim small">Nothing yet. Mark a game "▶ In progress" on its page, or rate a few
-        you loved, and this row fills itself.</p>
+      <p class="dim small">Tangents of your In progress games and the ones you rate highly show up
+        here. Mark or rate a few games to fill it.</p>
     {% endif %}
   </section>
 

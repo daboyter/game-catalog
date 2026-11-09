@@ -1,13 +1,13 @@
 """
 Home page — "/" (the store-game grid moved to /games).
 
-Three parts, top to bottom:
+Four parts, top to bottom, each in its own card:
 
-  Play next             automatic, no buttons to set: games marked In
-                        progress (best-rated first), then games like the ones
-                        rated highly ("Like StarCraft"). The same on every
-                        visit. Only the user's marks count, not Steam or ES-DE
-                        play history (see mine.py for why).
+  In progress           everything marked In progress (best-rated first).
+                        Only the user's marks count, not Steam or ES-DE play
+                        history (see mine.py for why).
+  Play next             Tangents of the In progress games and the ones rated
+                        highly ("Like StarCraft"), a new draw on every load.
   Where are you playing?  one button per device (DEVICES). The chosen one
                         shows a row of picks that play there.
   Scratch an itch…      one button per kind of game (ITCHES): retro,
@@ -24,7 +24,7 @@ toward well-rated games and toward themes of games rated highly.
 
 Picks leave out what every pick row leaves out (⚙ → Recommendations: the
 excluded labels, games marked Complete) and also games marked In progress,
-which are already under Play next.
+which are already in their own row.
 
 The left sidebar is the /games grid's filter list, so filtering is one
 click from here; its links open /games.
@@ -47,9 +47,8 @@ import roms
 import settings
 
 ROW = 12            # picks per device / itch row
-PLAY_NEXT_MAX = 12  # cards in the Play next row
-LIKE_SOURCES = 3    # "Like X" picks come from this many top-rated games …
-LIKE_EACH = 3       # … this many per game
+PLAY_NEXT_MAX = 12      # cards in the Play next row …
+PLAY_NEXT_SOURCES = 6   # … Tangents of up to this many In progress / highly rated games
 DRAW_POOL = 60      # picks are drawn from this many best-scoring matches
 FIND_HITS = 8       # tag search: games with the tag …
 FIND_TANGENTS = 4   # … plus games without it that share what those games have in common
@@ -243,41 +242,49 @@ def _row(spec, games, rom_pool, cfg, rng):
     return [{"kind": it["kind"], "game": it, "why": why} for _, it, why in picked + picked_roms]
 
 
-def _play_next(games, cards, rom_pool, games_cache, roms_cache, cfg):
-    """[{kind, game, why}]: In progress, then "Like X"."""
-    items = [g for g in games] + [c for c in cards]
-    out, seen = [], set()
+def _in_progress(games, cards):
+    """[{kind, game, why}]: everything marked In progress, best-rated first, then A–Z."""
+    items = [it for it in list(games) + list(cards) if (it["my"] or {}).get("status") == "in_progress"]
+    items.sort(key=lambda it: (-(it["my"].get("rating") or 0), it["title_lower"]))
+    return [{"kind": it["kind"], "game": it,
+             "why": f"♥ {it['my']['rating']}" if it["my"].get("rating") else ""} for it in items]
 
-    def add(it, why):
-        key = (it["kind"], it["id"])
-        if key not in seen and len(out) < PLAY_NEXT_MAX:
-            seen.add(key)
-            out.append({"kind": it["kind"], "game": it, "why": why})
 
-    in_progress = [it for it in items if (it["my"] or {}).get("status") == "in_progress"]
-    for it in sorted(in_progress, key=lambda it: (-((it["my"] or {}).get("rating") or 0),
-                                                  it["title_lower"])):
-        add(it, "In progress")
-
-    # "Like X": related() picks for the user's best-rated games (store games
-    # from store games, ROMs from ROMs: those are the pools related() knows)
-    rated = sorted((it for it in items if (it["my"] or {}).get("rating")),
+def _play_next(games, cards, gc, rc, cfg, rng):
+    """
+    [{kind, game, why, also}]: Tangents (recommend.suggestions, the game pages'
+    row) of the games marked In progress and the ones rated favor_min_rating+,
+    one from each source in turn so no single game fills the row. Store games
+    lead to store games, ROMs to ROMs (the pools Tangents knows). Redrawn on
+    every load, like Tangents on a game page.
+    """
+    items = list(games) + list(cards)
+    mine_ = [it for it in items if it["my"]]
+    in_progress = sorted((it for it in mine_ if it["my"].get("status") == "in_progress"),
+                         key=lambda it: -(it["my"].get("rating") or 0))
+    loved = sorted((it for it in mine_ if (it["my"].get("rating") or 0) >= cfg["favor_min_rating"]
+                    and it["my"].get("status") != "in_progress"),
                    key=lambda it: -it["my"]["rating"])
-    sources = [it for it in rated if it["my"]["rating"] >= cfg["favor_min_rating"]][:LIKE_SOURCES]
+    sources = (in_progress + loved)[:PLAY_NEXT_SOURCES]
+
+    rows = []
     for src in sources:
         if src["kind"] == "game":
-            pool, weights = games, games_cache["rel_weights"]
-        else:
-            pool, weights = rom_pool, roms_cache["rel_weights"]
-        picks = recommend.related(src, pool, weights, limit=LIKE_EACH + 3,
-                                  exclude=cfg["exclude_set"], skip_completed=cfg["skip_completed"],
-                                  liked=cfg["liked"])
-        added = 0
-        for p in picks:
-            if added < LIKE_EACH and _eligible(p["game"], cfg) and \
-                    (p["game"]["kind"], p["game"]["id"]) not in seen:
-                add(p["game"], f"Like {src['title']}")
-                added += 1
+            me, pool, weights, n = src, games, gc["weights"], gc["n"]
+        else:   # a ROM card: its IGDB game's stand-in, as on the ROM page
+            me = rc["rep_by_igdb"].get(src["igdb_id"], src) if src["igdb_id"] else src
+            pool, weights, n = rc["pick_pool"], rc["weights"], rc["n"]
+        rows.append((src, recommend.suggestions(me, pool, weights, n, cfg, rng)))
+
+    out, seen = [], {(it["kind"], it["id"]) for it in in_progress}
+    for i in range(max((len(r) for _, r in rows), default=0)):
+        for src, picks in rows:
+            if i < len(picks) and len(out) < PLAY_NEXT_MAX:
+                g = picks[i]["game"]
+                if (g["kind"], g["id"]) not in seen and _eligible(g, cfg):
+                    seen.add((g["kind"], g["id"]))
+                    out.append({"kind": g["kind"], "game": g, "why": f"Like {src['title']}",
+                                "also": _reasons(picks[i]["because"])})
     return out
 
 
@@ -492,7 +499,8 @@ def make_blueprint(games_data, roms_data, sidebar_facets):
 
         return render_template(
             "home.html",
-            play_next=_play_next(gc["games"], rc["cards"], rc["reps"], gc, rc, cfg),
+            in_progress=_in_progress(gc["games"], rc["cards"]),
+            play_next=_play_next(gc["games"], rc["cards"], gc, rc, cfg, rng),
             devices=DEVICES, itches=ITCHES, device=device, itch=itch,
             device_row=_row(DEVICES[device], gc["games"], rc["reps"], cfg, rng) if device else [],
             itch_row=_row(ITCHES[itch], gc["games"], rc["reps"], cfg, rng) if itch else [],
