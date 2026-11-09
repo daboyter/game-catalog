@@ -536,6 +536,17 @@ a.genre-tag:hover { color: var(--text); border-color: var(--accent); }
 .choice.active .choice-sub { color: rgba(255, 255, 255, .8); }
 .home-blurb { margin: 0 0 .8rem; line-height: 1.5; }
 .home-blurb a { color: var(--accent); white-space: nowrap; }
+.find-form { display: flex; gap: .4rem; align-items: center; margin-bottom: .9rem; max-width: 520px; }
+.find-form input {
+  flex: 1; min-width: 0; padding: .5rem .7rem; border-radius: 8px; min-height: 40px;
+  border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-size: .92rem;
+}
+.find-form button {
+  padding: .5rem .9rem; border-radius: 8px; min-height: 40px; border: none;
+  background: var(--accent); color: #fff; font-size: .9rem; cursor: pointer;
+}
+.find-sub { font-size: .8rem; font-weight: 600; margin: 1.2rem 0 .6rem; color: var(--text); }
+.find-sub .dim { font-weight: 400; margin-left: .4rem; }
 @media (max-width: 640px) {
   .home-section { scroll-margin-top: 150px; }                        /* taller header on a phone */
   .home-row { grid-template-columns: repeat(3, 1fr); gap: .6rem; }

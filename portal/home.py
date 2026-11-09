@@ -12,9 +12,12 @@ Three parts, top to bottom:
                         shows a row of picks that play there.
   Scratch an itch…      one button per kind of game (ITCHES): retro,
                         relaxing, strategy, … The chosen one shows a row of
-                        picks.
+                        picks. Or a search box for any tag the games carry
+                        (/?find=talking+animals): FIND_HITS games with that
+                        tag plus FIND_TANGENTS "tangents" (see _find below).
 
-The buttons are plain links: /?for=odin&itch=scifi. A device and an itch
+The buttons are plain links: /?for=odin&itch=scifi. (The search is
+"find", not "tag": /?tag=Relaxing is an old grid link.) A device and an itch
 can be open at the same time; clicking an open button closes it. Every
 load draws a new set of picks (the Shuffle link just reloads), weighted
 toward well-rated games and toward themes of games rated highly.
@@ -31,7 +34,8 @@ test function that gets one item and returns a short reason shown under
 its cover (truthy = it's a match), or None.
 """
 
-import datetime as dt, random
+import math, random
+from urllib.parse import urlencode
 from flask import Blueprint, redirect, render_template, request
 
 import mine
@@ -44,6 +48,10 @@ PLAY_NEXT_MAX = 12  # cards in the Play next row
 LIKE_SOURCES = 3    # "Like X" picks come from this many top-rated games …
 LIKE_EACH = 3       # … this many per game
 DRAW_POOL = 60      # picks are drawn from this many best-scoring matches
+FIND_HITS = 8       # tag search: games with the tag …
+FIND_TANGENTS = 4   # … plus games without it that share what those games have in common
+FIND_MIN_GAMES = 2  # a keyword needs this many store games to be offered in the search list
+FIND_FEW = 3        # a tag on this many games or fewer has no pattern to learn: see _find
 UNKNOWN_RATING = 62 # score for a game with no (or too few) critic ratings
 MIN_RATINGS = 5     # same as app.py: fewer reviews than this = no rating
 
@@ -270,20 +278,176 @@ def _play_next(games, cards, rom_pool, games_cache, roms_cache, cfg):
     return out
 
 
+# ── tag search ────────────────────────────────────────────────────────────────
+# "Tags" here = every label a store game or ROM carries: genre, theme, curated
+# tag, mode, perspective, and IGDB keywords minus recommend.NOISE. Matching is
+# case-insensitive across kinds, so "Roguelike" finds both the curated tag and
+# the keyword.
+
+FACET_KINDS = ("tag", "theme", "genre", "perspective", "mode")   # /games has a filter for these
+_vocab_cache = {"key": None}
+
+
+def _tag_values(it):
+    """Lower-cased tag values of one item (store game or ROM)."""
+    return {v.lower() for k, v in it["labels"]
+            if k != "keyword" or not recommend.NOISE.search(v)}
+
+
+def _vocabulary(games):
+    """{lower value: {"name", "kinds", "n"}} over store games; cached per catalog load."""
+    if _vocab_cache["key"] is not id(games):
+        vocab = {}
+        for g in games:
+            for k, v in g["labels"]:
+                if k == "keyword" and recommend.NOISE.search(v):
+                    continue
+                e = vocab.setdefault(v.lower(), {"name": v, "kinds": set(), "n": 0})
+                e["kinds"].add(k)
+                if k != "keyword":
+                    e["name"] = v                       # prefer the facet's capitalization
+        for g in games:
+            for v in _tag_values(g):
+                vocab[v]["n"] += 1
+        vocab = {v: e for v, e in vocab.items()
+                 if e["kinds"] - {"keyword"} or e["n"] >= FIND_MIN_GAMES}
+        for e in vocab.values():
+            e["name"] = e["name"][:1].upper() + e["name"][1:]
+            kind = next((k for k in FACET_KINDS if k in e["kinds"]), None)
+            e["browse"] = f"/games?{urlencode({kind: e['name']})}" if kind else None
+        _vocab_cache.update(key=id(games), vocab=vocab,
+                            names=sorted((e["name"] for e in vocab.values()), key=str.lower))
+    return _vocab_cache
+
+
+# IGDB keywords on lots of unrelated games that say nothing about what a game
+# is like ("Time travel" games share "human" and "male protagonist"; that's not
+# a reason). Tag tangents only: Tangents on game pages weigh these down by
+# rarity already.
+BLAND = {"human", "male protagonist", "female protagonist", "voice acting", "death", "explosion",
+         "bloody", "melee", "non-player character", "boss fight", "action-adventure", "swimming",
+         "unlockables", "optional objective", "tooltips", "real-time combat", "multiple endings",
+         "sequel", "silent protagonist", "nameless protagonist", "character creation", "ambient music"}
+
+
+def _features(it):
+    """What a game "is like", for tag tangents: its theme/tag/genre/perspective labels and clean keywords."""
+    return {(k, v) for k, v in it["labels"] if k in ("theme", "tag", "genre", "perspective")} \
+        | {t for t in it["traits"] if t[0] == "keyword" and t[1] not in BLAND}
+
+
+def _find(value, games, rom_pool, cfg, rng, gc):
+    """
+    (hits, tangents) for one tag value (lower case).
+
+    hits: FIND_HITS games with the tag, drawn like the itch rows (store games
+    first; ROMs fill in when there aren't enough).
+
+    tangents: FIND_TANGENTS store games WITHOUT the tag that share what the
+    tagged games have in common. Every feature (_features) of the tagged
+    games is weighted by how typical it is of them (share of tagged games
+    that have it) × how rare it is in the whole library (idf), keeping only
+    features at least twice as common among them as overall — so "talking
+    animals" leads to its comedy and kids games, not to "Action". The top
+    20 features then score every untagged game; it needs two of them.
+    A tag on FIND_FEW games or fewer has no pattern (with 2 games, every odd
+    keyword either has "counts"), so those get the game pages' Tangents
+    (recommend.suggestions) of the tagged games instead, taken in turn.
+    """
+    tagged = [g for g in games if value in _tag_values(g)]
+    eligible_tagged = [g for g in tagged if _eligible(g, cfg)]
+    hits = _draw([(_score(g, cfg["liked"]), g, _year_rating(g)) for g in eligible_tagged], FIND_HITS, rng)
+    if len(hits) < FIND_HITS:
+        roms_tagged = [r for r in rom_pool if _eligible(r, cfg) and value in _tag_values(r)]
+        hits += _draw([(_score(r, cfg["liked"]), r, roms.SYSTEM_LABELS.get(r["system"], r["system"]))
+                       for r in roms_tagged], FIND_HITS - len(hits), rng)
+    hits = [{"kind": it["kind"], "game": it, "why": why} for _, it, why in hits]
+
+    tangents = []
+    if 0 < len(tagged) <= FIND_FEW:
+        tagged_ids = {g["id"] for g in tagged}
+        rows = [recommend.suggestions(g, games, gc["weights"], gc["n"], cfg, rng) for g in tagged]
+        seen = set(tagged_ids)
+        for i in range(max(map(len, rows))):
+            for row in rows:
+                if i < len(row) and len(tangents) < FIND_TANGENTS:
+                    p = row[i]
+                    because = _reasons(b for b in p["because"] if b.lower() not in BLAND)
+                    if because and p["game"]["id"] not in seen and _eligible(p["game"], cfg):
+                        seen.add(p["game"]["id"])
+                        tangents.append({"kind": "game", "game": p["game"], "why": because})
+    elif tagged:
+        n_all, m = len(games), len(tagged)
+        df, dt_ = {}, {}
+        for g in games:
+            for f in _features(g):
+                df[f] = df.get(f, 0) + 1
+        for g in tagged:
+            for f in _features(g):
+                dt_[f] = dt_.get(f, 0) + 1
+        min_c = 1 if m < 4 else max(2, math.ceil(0.1 * m))
+        weights = {f: (c / m) * math.log(n_all / df[f]) for f, c in dt_.items()
+                   if c >= min_c and f[1].lower() != value and (c / m) >= 2 * df[f] / n_all}
+        top = dict(sorted(weights.items(), key=lambda x: -x[1])[:20])
+        tagged_ids = {g["id"] for g in tagged}
+        scored = []
+        for g in games:
+            if g["id"] in tagged_ids or not _eligible(g, cfg):
+                continue
+            shared = sorted((f for f in _features(g) if f in top), key=lambda f: -top[f])
+            if len(shared) >= 2:
+                score = sum(top[f] for f in shared) * _score(g, cfg["liked"])
+                why = _reasons(recommend._display(f) for f in shared)
+                scored.append((score, g, why))
+        # weight by score² like Tangents on game pages, not ^4: these should surprise a little
+        pool = sorted(scored, key=lambda x: -x[0])[:30]
+        while pool and len(tangents) < FIND_TANGENTS:
+            i = rng.choices(range(len(pool)), weights=[x[0] ** 2 for x in pool])[0]
+            _, g, why = pool.pop(i)
+            tangents.append({"kind": "game", "game": g, "why": why})
+    return hits, tangents, len(tagged)
+
+
+def _reasons(names, n=2):
+    """
+    First n distinct reasons, joined. The tag "Story rich" and the keyword
+    "story rich" are one, and so are "Procedural generation" / "Procedurally
+    generated" (same word stem, recommend._same_word, cut to 9 letters).
+    """
+    out, keys = [], set()
+    for name in names:
+        key = recommend._same_word(name)[:9]
+        if key not in keys:
+            keys.add(key)
+            out.append(name)
+    return " · ".join(out[:n])
+
+
+def _year_rating(g):
+    """Reason line for a tag hit: its critic rating, if it has one."""
+    if g.get("rating") and g.get("rating_count", 0) >= MIN_RATINGS:
+        return f"★ {round(g['rating'])}"
+    return ""
+
+
 # ── route ─────────────────────────────────────────────────────────────────────
 
-HOME_PARAMS = {"for", "itch", "shuffle"}
+HOME_PARAMS = {"for", "itch", "find", "shuffle"}
 
 
 def _toggle(param, key):
-    """Link for a button: open `key` under `param` (or close it if open), keep the other choice."""
-    args = {k: v for k, v in request.args.items() if k in ("for", "itch")}
+    """
+    Link for a button: open `key` under `param` (or close it if open), keep the
+    device choice. An itch button and the tag search replace each other.
+    """
+    args = {k: v for k, v in request.args.items() if k in ("for", "itch", "find")}
+    if param == "itch":
+        args.pop("find", None)
     if args.get(param) == key:
         del args[param]
     else:
         args[param] = key
-    query = "&".join(f"{k}={v}" for k, v in sorted(args.items()))
-    return f"/?{query}#{param}" if query else f"/#{param}"
+    return f"/?{urlencode(sorted(args.items()))}#{param}" if args else f"/#{param}"
 
 
 def make_blueprint(games_data, roms_data):
@@ -301,6 +465,25 @@ def make_blueprint(games_data, roms_data):
 
         device = request.args.get("for") if request.args.get("for") in DEVICES else None
         itch = request.args.get("itch") if request.args.get("itch") in ITCHES else None
+
+        # tag search: exact tag, else the one tag containing the text, else a list to choose from
+        voc = _vocabulary(gc["games"])
+        find = " ".join(request.args.get("find", "").split())
+        found = hits = tangents = None
+        choices, n_tagged = [], 0
+        if find:
+            itch = None
+            q = find.lower()
+            if q not in voc["vocab"]:
+                near = sorted((v for v in voc["vocab"] if q in v), key=lambda v: -voc["vocab"][v]["n"])
+                if len(near) == 1:
+                    q = near[0]
+                else:
+                    choices = [voc["vocab"][v] for v in near[:15]]
+            if q in voc["vocab"]:
+                found = voc["vocab"][q]
+                hits, tangents, n_tagged = _find(q, gc["games"], rc["reps"], cfg, rng, gc)
+
         return render_template(
             "home.html",
             play_next=_play_next(gc["games"], rc["cards"], rc["reps"], gc, rc, cfg),
@@ -308,6 +491,9 @@ def make_blueprint(games_data, roms_data):
             device_row=_row(DEVICES[device], gc["games"], rc["reps"], cfg, rng) if device else [],
             itch_row=_row(ITCHES[itch], gc["games"], rc["reps"], cfg, rng) if itch else [],
             toggle=_toggle, system_labels=roms.SYSTEM_LABELS,
+            find=find, found=found, find_hits=hits or [], find_tangents=tangents or [],
+            find_choices=choices, n_tagged=n_tagged, tag_names=voc["names"],
+            find_link=lambda name: f"/?{urlencode([*([('for', device)] if device else []), ('find', name)])}#itch",
         )
 
     return bp

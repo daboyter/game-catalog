@@ -31,6 +31,7 @@
     </a>
     {% endfor %}
   </nav>
+  {% if caller is defined %}{{ caller() }}{% endif %}
   {% if current %}
     {% set c = choices[current] %}
     <p class="home-blurb dim small">
@@ -61,6 +62,33 @@
   </section>
 
   {{ chooser('for', 'Where are you playing?', devices, device, device_row) }}
-  {{ chooser('itch', 'Scratch an itch…', itches, itch, itch_row) }}
+  {% call chooser('itch', 'Scratch an itch…', itches, itch, itch_row) %}
+    {# Tag search: any genre, theme, tag, mode, perspective or IGDB keyword (home.py _find) #}
+    <form class="find-form" method="get" action="/#itch">
+      {% if device %}<input type="hidden" name="for" value="{{ device }}">{% endif %}
+      <input type="search" name="find" value="{{ find }}" list="tag-names" autocomplete="off"
+             placeholder="…or search a tag: space, talking animals, heist…" aria-label="Search a tag">
+      <button type="submit">Find</button>
+      {% if find %}<a class="clear-btn" href="{{ toggle('find', find) }}" title="Clear">✕</a>{% endif %}
+      <datalist id="tag-names">{% for n in tag_names %}<option value="{{ n }}">{% endfor %}</datalist>
+    </form>
+    {% if found %}
+      <p class="home-blurb dim small">
+        {{ n_tagged }} game{{ 's' if n_tagged != 1 }} tagged <strong>{{ found.name }}</strong>.
+        <a href="{{ request.full_path.rstrip('?') }}#itch" onclick="location.reload(); return false;">↻ Shuffle</a>
+        {% if found.browse %}· <a href="{{ found.browse }}">Browse all →</a>{% endif %}
+      </p>
+      {% if find_hits %}{{ pick_row(find_hits) }}{% else %}<p class="dim small">All of them are excluded or marked complete.</p>{% endif %}
+      {% if find_tangents %}
+        <h3 class="find-sub">Tangents <span class="dim">not tagged {{ found.name }}, but a lot like the games that are</span></h3>
+        {{ pick_row(find_tangents) }}
+      {% endif %}
+    {% elif find and find_choices %}
+      <p class="home-blurb dim small">No tag called “{{ find }}”. Did you mean:
+        {% for c in find_choices %}<a href="{{ find_link(c.name) }}">{{ c.name }}</a> <span class="dim">({{ c.n }})</span>{{ ', ' if not loop.last }}{% endfor %}</p>
+    {% elif find %}
+      <p class="home-blurb dim small">No tag matches “{{ find }}”.</p>
+    {% endif %}
+  {% endcall %}
 </div>
 {% endblock %}
