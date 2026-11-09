@@ -497,20 +497,15 @@ a.genre-tag:hover { color: var(--text); border-color: var(--accent); }
 /* My status / rating (mine.py): detail-page box, card badges, My games page */
 .my-box { display: flex; flex-direction: column; gap: .5rem; scroll-margin-top: 7rem; }   /* below the sticky header after #my */
 .my-form { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; font-size: .8rem; }
-.my-form button, .my-suggest button {
+.my-form button {
   padding: .3rem .65rem; border-radius: 6px; border: 1px solid var(--border);
   background: var(--bg2); color: var(--text-dim); cursor: pointer; font-size: .8rem;
 }
 .my-rating button { min-width: 2rem; padding: .3rem .4rem; }
-.my-form button:hover, .my-suggest button:hover { border-color: var(--accent); color: var(--text); }
+.my-form button:hover { border-color: var(--accent); color: var(--text); }
 .my-form button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .my-rating button.below { border-color: var(--accent); color: var(--text); }
 .my-form .my-clear { background: none; }
-.my-suggest {
-  display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .8rem;
-  padding: .45rem .6rem; border: 1px dashed var(--border); border-radius: 6px;
-}
-.my-suggest.compact { border: none; padding: .2rem 0; gap: .3rem; }
 .my-badge {
   display: inline-block; padding: .05rem .35rem; border-radius: 4px; font-size: .68rem;
   background: var(--accent); color: #fff;

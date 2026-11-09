@@ -506,7 +506,6 @@ def game_detail(game_id):
         tangential=tangential,
         retro=retro,
         my=me["my"] if me else None, my_kind="game", my_id=game_id,
-        played_recently=mine.played_recently(me, "game") if me else None,
         lutris_via=sorted(me["f"]["lutris"]) if me else [],
         system_labels=roms.SYSTEM_LABELS,
         game=g_row,

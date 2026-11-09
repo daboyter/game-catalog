@@ -23,7 +23,7 @@ Register with Claude Code (user scope, stored in ~/.claude.json — NOT settings
 (or drop the "ssh <your-host>" part when Claude Code runs on the same machine)
 """
 
-import datetime as dt, json, pathlib, sqlite3
+import json, pathlib, sqlite3
 from mcp.server import MCPServer
 
 import my_games as my_store         # same folder: the user's status/ratings (read-only here);
@@ -169,17 +169,12 @@ def search_games(q: str = "", store: str = "", compat: str = "", limit: int = 20
     return json.dumps(result_list, default=str)
 
 
-RECENT_DAYS, MIN_PLAY_MINUTES = 30, 10      # same as the portal's "Suggested" (portal/mine.py)
-
-
 @mcp.tool()
-def my_games(status: str = "", min_rating: int = 0, include_suggested: bool = True) -> str:
+def my_games(status: str = "", min_rating: int = 0) -> str:
     """The user's own play status and ratings, for recommendations.
 
     status:     "in_progress" or "complete" to filter; empty = all marked/rated
     min_rating: only entries the user rated at least this (1–10); 0 = no filter
-    include_suggested: also list games/ROMs played in the last 30 days (10+ minutes)
-                       that the user hasn't marked yet
 
     Each entry: kind (game = store game, rom = ES-DE ROM), title, my_status
     ("in_progress" / "complete" / null), my_rating (1–10 / null), updated,
@@ -189,6 +184,9 @@ def my_games(status: str = "", min_rating: int = 0, include_suggested: bool = Tr
     "In progress" games are often "forever" games the user keeps returning to
     (Minecraft, No Man's Sky): don't treat them as unfinished business.
     Completed games shouldn't be recommended again.
+    Playtime may not be the user's own: store accounts and the ROM setup
+    can be shared with other people. Go by my_status and my_rating to know
+    what the user is playing.
     """
     entries = my_store.entries()
     conn = _open_db()
@@ -225,34 +223,9 @@ def my_games(status: str = "", min_rating: int = 0, include_suggested: bool = Tr
                 item.update(play_count=p["c"], playtime_seconds=p["s"], last_played=p["l"])
             out.append(item)
 
-        suggested = []
-        if include_suggested:
-            since = (dt.date.today() - dt.timedelta(days=RECENT_DAYS)).isoformat()
-            for r in conn.execute("""
-                    SELECT g.id, g.canonical_title, g.igdb_id, SUM(p.minutes_total) m, MAX(p.last_played_at) l,
-                           (SELECT GROUP_CONCAT(o.store || ':' || o.store_id) FROM ownership o
-                             WHERE o.game_id = g.id AND o.kind != 'launcher') refs
-                    FROM playtime p JOIN games g ON g.id = p.game_id
-                    GROUP BY g.id HAVING l >= ? AND m >= ? AND refs IS NOT NULL ORDER BY l DESC""",
-                    (since, MIN_PLAY_MINUTES)):
-                if not (my_store.find(my_store.game_keys(r["igdb_id"], r["refs"].split(","))) or {}).get("status"):
-                    suggested.append({"kind": "game", "title": r["canonical_title"], "game_id": r["id"],
-                                      "playtime_minutes": r["m"], "last_played": r["l"]})
-            for r in conn.execute("""
-                    SELECT system, igdb_id, MIN(es_name) t, GROUP_CONCAT(rom_path, char(31)) paths,
-                           SUM(playtime_secs) s, MAX(lastplayed) l
-                    FROM esde_entries WHERE lastplayed >= ?
-                    GROUP BY system, COALESCE(igdb_id, es_name) HAVING s >= ? ORDER BY l DESC""",
-                    (since.replace("-", ""), MIN_PLAY_MINUTES * 60)):
-                keys = my_store.rom_keys(r["system"], r["igdb_id"], r["paths"].split("\x1f"))
-                if not (my_store.find(keys) or {}).get("status"):
-                    suggested.append({"kind": "rom", "title": r["t"], "system": r["system"],
-                                      "playtime_seconds": r["s"], "last_played": r["l"]})
     finally:
         conn.close()
     result = {"my_games": out}
-    if include_suggested:
-        result["played_recently_not_marked"] = suggested
     return json.dumps(result, default=str, ensure_ascii=False)
 
 

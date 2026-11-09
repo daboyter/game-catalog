@@ -4,10 +4,10 @@ Home page — "/" (the store-game grid moved to /games).
 Three parts, top to bottom:
 
   Play next             automatic, no buttons to set: games marked In
-                        progress (best-rated first), then games played in the
-                        last mine.RECENT_DAYS days but not marked, then games
-                        like the ones rated highly ("Like StarCraft"). The same
-                        on every visit.
+                        progress (best-rated first), then games like the ones
+                        rated highly ("Like StarCraft"). The same on every
+                        visit. Only the user's marks count, not Steam or ES-DE
+                        play history (see mine.py for why).
   Where are you playing?  one button per device (DEVICES). The chosen one
                         shows a row of picks that play there.
   Scratch an itch…      one button per kind of game (ITCHES): retro,
@@ -41,7 +41,6 @@ import settings
 
 ROW = 12            # picks per device / itch row
 PLAY_NEXT_MAX = 12  # cards in the Play next row
-RECENT_MAX = 5      # at most this many "Played <date>" cards, leaving room for "Like X"
 LIKE_SOURCES = 3    # "Like X" picks come from this many top-rated games …
 LIKE_EACH = 3       # … this many per game
 DRAW_POOL = 60      # picks are drawn from this many best-scoring matches
@@ -234,7 +233,7 @@ def _row(spec, games, rom_pool, cfg, rng):
 
 
 def _play_next(games, cards, rom_pool, games_cache, roms_cache, cfg):
-    """[{kind, game, why}]: In progress, then played recently, then "Like X"."""
+    """[{kind, game, why}]: In progress, then "Like X"."""
     items = [g for g in games] + [c for c in cards]
     out, seen = [], set()
 
@@ -248,11 +247,6 @@ def _play_next(games, cards, rom_pool, games_cache, roms_cache, cfg):
     for it in sorted(in_progress, key=lambda it: (-((it["my"] or {}).get("rating") or 0),
                                                   it["title_lower"])):
         add(it, "In progress")
-
-    recent = [(mine.played_recently(it, it["kind"]), it) for it in items]
-    for day, it in sorted(((d, it) for d, it in recent if d), key=lambda x: x[0],
-                          reverse=True)[:RECENT_MAX]:
-        add(it, f"Played {day:%b} {day.day}")
 
     # "Like X": related() picks for the user's best-rated games (store games
     # from store games, ROMs from ROMs: those are the pools related() knows)
@@ -314,7 +308,6 @@ def make_blueprint(games_data, roms_data):
             device_row=_row(DEVICES[device], gc["games"], rc["reps"], cfg, rng) if device else [],
             itch_row=_row(ITCHES[itch], gc["games"], rc["reps"], cfg, rng) if itch else [],
             toggle=_toggle, system_labels=roms.SYSTEM_LABELS,
-            recent_days=mine.RECENT_DAYS,
         )
 
     return bp

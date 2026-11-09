@@ -489,7 +489,6 @@ def make_blueprint(get_db, games_data):
         return render_template("rom.html",
             tangential=tangential, modern=modern, system_labels=SYSTEM_LABELS,
             my=card["my"] if card else None, my_kind="rom", my_id=rom_id,
-            played_recently=mine.played_recently(card, "rom") if card else None,
             versions=versions if len(versions) > 1 else [],
             folder=subfolder(row["rom_path"]), hacks_dir=HACKS_DIR, variants_dir=VARIANTS_DIR,
             tag_rows=[(k, h, tags[k]) for k, h in DETAIL_TAG_ROWS if tags.get(k)],

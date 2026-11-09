@@ -32,27 +32,6 @@
   {{ my_row('Rated', rated, 'Nothing rated yet. Use "My rating" on a game\'s page.') }}
   {{ my_row('Complete', complete, 'Nothing marked complete yet.') }}
 
-  <section class="detail-section series-section">
-    <h2>Suggested <span class="dim series-all">played in the last {{ recent_days }} days for {{ min_minutes }}+ minutes, not marked</span></h2>
-    {% if suggested %}
-    <ul class="picks-row related-row my-row">
-      {% for kind, it, day in suggested %}
-      <li class="pick">
-        {{ pick_card(it, kind) }}
-        <form method="post" action="/my/set" class="my-suggest compact">
-          <input type="hidden" name="kind" value="{{ kind }}">
-          <input type="hidden" name="id" value="{{ it.id }}">
-          <span class="dim">Played {{ day.strftime('%b %-d') }}</span>
-          <button type="submit" name="status" value="in_progress">▶ In progress</button>
-        </form>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-      <p class="dim small">Nothing played recently that isn't marked yet.</p>
-    {% endif %}
-  </section>
-
   {% if missing %}
   <section class="detail-section">
     <h2>Not in the library right now</h2>

@@ -2,7 +2,7 @@
    my_box: the editor on game / ROM pages — plain POST forms, one click each.
    my_badge: the small mark on grid cards. #}
 
-{% macro my_box(my, kind, id, played_recently) %}
+{% macro my_box(my, kind, id) %}
 {% set status = (my or {}).get('status') %}
 {% set rating = (my or {}).get('rating') %}
 <section class="detail-section my-box" id="my">
@@ -24,14 +24,6 @@
     {% endfor %}
     {% if rating %}<button type="submit" name="rating" value="clear" class="my-clear">Clear</button>{% endif %}
   </form>
-  {% if played_recently %}
-    <form method="post" action="/my/set" class="my-suggest">
-      <input type="hidden" name="kind" value="{{ kind }}">
-      <input type="hidden" name="id" value="{{ id }}">
-      <span>Played recently ({{ played_recently.strftime('%b %-d') }}). Mark as in progress?</span>
-      <button type="submit" name="status" value="in_progress">▶ Yes, in progress</button>
-    </form>
-  {% endif %}
 </section>
 {% endmacro %}
 

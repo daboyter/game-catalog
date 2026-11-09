@@ -11,22 +11,17 @@ It runs per request rather than in the catalog caches, so a click shows at
 once. Store games come from app.py's catalog, ROMs as roms.py's cards (one
 per game and system).
 
-"Played recently" (RECENT_DAYS): unmarked games with store playtime
-(Steam, Heroic, Lutris last_played_at) or ROMs with an ES-DE last-played
-date in that window get a gentle "Mark as in progress?" — never set
-automatically. Only after MIN_PLAY_MINUTES of recorded playtime in all:
-ES-DE logs every launch, and setting up the emulators in October 2026
-launched ~50 ROMs for a minute or two each.
+Only what the user marks counts. Store playtime and ES-DE plays are NOT
+used to guess what the user is playing (removed 2026-11-09): a store
+account or an emulation box is often shared with other people, so
+"played recently" can say more about them than about the user.
 """
 
-import datetime as dt, pathlib, sys
+import pathlib, sys
 from flask import Blueprint, abort, redirect, render_template, request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 import my_games                                          # noqa: E402  (game-catalog root)
-
-RECENT_DAYS = 30
-MIN_PLAY_MINUTES = 10
 
 MYSTATUS_LABELS = ["In progress", "Complete", "Not marked"]
 MYRATING_LABELS = [str(n) for n in range(10, 0, -1)] + ["Not rated"]
@@ -50,29 +45,6 @@ def annotate(items, kind):
         it["f"]["mystatus"] = {my_games.STATUSES[status] if status else "Not marked"}
         it["f"]["myrating"] = {str(rating) if rating else "Not rated"}
     return items
-
-
-def last_played(item, kind):
-    """datetime.date of the last play we know of, or None."""
-    raw = item.get("last_played") if kind == "game" else item.get("lastplayed")
-    if not raw:
-        return None
-    try:
-        return dt.date.fromisoformat(raw[:10]) if kind == "game" else \
-               dt.date(int(raw[:4]), int(raw[4:6]), int(raw[6:8]))     # ES-DE: 20261015T172109
-    except ValueError:
-        return None
-
-
-def played_recently(item, kind):
-    """Last-played date if within RECENT_DAYS and the item is unmarked, else None."""
-    if (item.get("my") or {}).get("status"):
-        return None
-    minutes = item.get("minutes", 0) if kind == "game" else item.get("playtime_secs", 0) / 60
-    if minutes < MIN_PLAY_MINUTES:
-        return None
-    day = last_played(item, kind)
-    return day if day and (dt.date.today() - day).days <= RECENT_DAYS else None
 
 
 LIKED_COMMON = 0.2    # labels on more than 20% of store games ("Action") say nothing about taste
@@ -165,8 +137,6 @@ def make_blueprint(games_data, roms_data):
         rated = sorted((x for x in marked if x[1]["my"].get("rating")),
                        key=lambda x: (-x[1]["my"]["rating"], x[1]["title_lower"]))
         complete = sorted((x for x in marked if x[1]["my"].get("status") == "complete"), key=by_title)
-        suggested = sorted(((k, it, played_recently(it, k)) for k, it in items
-                            if played_recently(it, k)), key=lambda x: x[2], reverse=True)
         # entries whose game/ROM isn't in the library any more (kept, never deleted)
         found = {id(it["my"]) for _, it in marked}
         missing = sorted((e for e in my_games.entries().values() if id(e) not in found),
@@ -174,7 +144,7 @@ def make_blueprint(games_data, roms_data):
         from roms import SYSTEM_LABELS                   # here: roms.py imports this module
         return render_template("my.html", in_progress=in_progress, rated=rated, complete=complete,
                                system_labels=SYSTEM_LABELS,
-                               suggested=suggested, missing=missing, recent_days=RECENT_DAYS, min_minutes=MIN_PLAY_MINUTES,
+                               missing=missing,
                                my_file=str(my_games.MY_FILE).replace(str(pathlib.Path.home()), "~"))
 
     return bp
