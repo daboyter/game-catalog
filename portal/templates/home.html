@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{# Home page (home.py): Play next, then picks by device and by itch. #}
+{% from "_picks.html" import pick_card with context %}
+
+{% block title %}Game Library{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{# A row of cards with a reason line under each: rows of {kind, game, why} #}
+{% macro pick_row(rows) %}
+<ul class="picks-row related-row home-row">
+  {% for r in rows %}
+  <li class="pick">
+    {{ pick_card(r.game, r.kind) }}
+    <div class="pick-why">{{ r.why }}</div>
+  </li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{# One button group and, when one is open, its row #}
+{% macro chooser(param, heading, choices, current, rows) %}
+<section class="home-section" id="{{ param }}">
+  <h2>{{ heading }}</h2>
+  <nav class="choice-buttons">
+    {% for key, c in choices.items() %}
+    <a class="choice {{ 'active' if key == current }}" href="{{ toggle(param, key) }}"
+       {% if key == current %}aria-current="true" title="Close"{% endif %}>
+      <span class="choice-icon" aria-hidden="true">{{ c.icon }}</span>
+      <span class="choice-name">{{ c.name }}</span>
+      {% if c.sub %}<span class="choice-sub">{{ c.sub }}</span>{% endif %}
+    </a>
+    {% endfor %}
+  </nav>
+  {% if current %}
+    {% set c = choices[current] %}
+    <p class="home-blurb dim small">
+      {{ c.blurb }}
+      {# a plain reload draws a new set; the #anchor keeps the page here #}
+      <a href="{{ request.full_path.rstrip('?') }}#{{ param }}" onclick="location.reload(); return false;">↻ Shuffle</a>
+      {% if c.browse %}· <a href="{{ c.browse }}">Browse all →</a>{% endif %}
+    </p>
+    {% if rows %}
+      {{ pick_row(rows) }}
+    {% else %}
+      <p class="dim small">Nothing matches right now.</p>
+    {% endif %}
+  {% endif %}
+</section>
+{% endmacro %}
+
+{% block content %}
+<div class="home">
+  <section class="home-section">
+    <h2>Play next</h2>
+    {% if play_next %}
+      {{ pick_row(play_next) }}
+    {% else %}
+      <p class="dim small">Nothing yet. Mark a game "▶ In progress" on its page, or rate a few
+        you loved, and this row fills itself.</p>
+    {% endif %}
+  </section>
+
+  {{ chooser('for', 'Where are you playing?', devices, device, device_row) }}
+  {{ chooser('itch', 'Scratch an itch…', itches, itch, itch_row) }}
+</div>
+{% endblock %}

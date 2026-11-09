@@ -24,11 +24,11 @@
       {% set in_roms = request.path.startswith('/rom') %}
       {% set in_settings = request.path.startswith('/scans') or request.path.startswith('/settings') %}
       {% set in_my = request.path.startswith('/my') %}
-      <a href="/" class="{{ 'active' if not in_roms and not in_settings and not in_my }}">Games</a>
+      <a href="/games" class="{{ 'active' if request.path.startswith('/game') }}">Games</a>
       <a href="/roms" class="{{ 'active' if in_roms }}">ROMs</a>
       <a href="/my" class="{{ 'active' if in_my }}">My games</a>
     </nav>
-    <form class="search-form" method="get" action="{% block search_action %}/{% endblock %}">
+    <form class="search-form" method="get" action="{% block search_action %}/games{% endblock %}">
       {# keep active filters and sort when searching #}
       {% block search_hidden %}{% endblock %}
       <input type="search" name="q" value="{{ q|default('') }}"
@@ -52,10 +52,10 @@
       <nav>
         <h3>Stores</h3>
         <ul>
-          <li><a href="/">All ({{ total_games }})</a></li>
+          <li><a href="/games">All ({{ total_games }})</a></li>
           {% for key, label in store_labels.items() if stats[key] %}{# Lutris: only launchers now #}
           <li>
-            <a href="/?store={{ key }}">
+            <a href="/games?store={{ key }}">
               <span class="store-badge store-{{ key }}">{{ label }}</span>
               <span class="count">{{ stats[key] }}</span>
             </a>

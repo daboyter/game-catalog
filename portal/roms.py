@@ -302,6 +302,7 @@ def _load(db):
         traits = recommend.trait_set((k, v) for k in recommend.TRAIT_KINDS for v in mine.get(k, ()))
         roms.append({
             "id":          r["id"],
+            "kind":        "rom",                     # vs "game" (home page rows)
             "igdb_id":     r["igdb_id"],
             "rom_path":    r["rom_path"],
             "title":       name,

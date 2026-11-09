@@ -518,3 +518,31 @@ a.genre-tag:hover { color: var(--text); border-color: var(--accent); }
 .my-badge.done  { background: #2f7d4f; }
 .my-badge.rated { background: #8a3b6b; }
 .my-page { max-width: 1100px; }
+
+/* Home page (home.html): Play next, then device and itch buttons with a pick row */
+.home { max-width: 1100px; }
+.home-section { margin-bottom: 2.2rem; scroll-margin-top: 70px; }   /* #for / #itch: clear the sticky header */
+.home-section h2 {
+  font-size: .9rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-dim); margin-bottom: .7rem;
+}
+.home-row { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.choice-buttons { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .8rem; }
+.choice {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .55rem .9rem; border-radius: 10px; min-height: 44px;   /* thumb-sized */
+  background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+  font-size: .92rem; text-decoration: none;
+}
+.choice:hover { border-color: var(--accent); color: var(--text); }
+.choice.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.choice-icon { font-size: 1.15rem; line-height: 1; }
+.choice-sub  { font-size: .72rem; color: var(--text-dim); }
+.choice.active .choice-sub { color: rgba(255, 255, 255, .8); }
+.home-blurb { margin: 0 0 .8rem; line-height: 1.5; }
+.home-blurb a { color: var(--accent); white-space: nowrap; }
+@media (max-width: 640px) {
+  .home-section { scroll-margin-top: 150px; }                        /* taller header on a phone */
+  .home-row { grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+  .choice { padding: .5rem .75rem; font-size: .88rem; }
+}

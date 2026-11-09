@@ -9,7 +9,8 @@ For auto-start see game-catalog-portal.service in the parent directory.
 
 Pages
 -----
-  /                store games grid (this file)     /game/<id>   game detail
+  /                home: Play next, picks by device / itch (home.py)
+  /games           store games grid (this file)     /game/<id>   game detail
   /roms            ES-DE ROMs grid (roms.py)         /rom/<id>    ROM detail
   /scans           scan health + rescan buttons (scans.py)
 
@@ -19,7 +20,8 @@ The library is small (~1,500 games), so the grid loads every game plus its
 browsable tags once (cached CACHE_SECS) and filters in Python instead of
 building SQL per request. The filter/count/sort/URL mechanics are shared
 with the ROM grid in browse.py, e.g.
-    /?genre=RPG&genre=Strategy&mode=Co-operative&sort=rating
+    /games?genre=RPG&genre=Strategy&mode=Co-operative&sort=rating
+(The grid was at "/" until 2026-11; home.py redirects old links.)
 series / developer / publisher work like sidebar filters but have no
 sidebar section; the game detail page links to them.
 """
@@ -32,6 +34,7 @@ import recommend
 import roms
 import settings
 import mine
+import home
 from roms import make_blueprint as make_roms_blueprint
 from scans import make_blueprint as make_scans_blueprint
 
@@ -252,6 +255,7 @@ def _load_catalog(db):
         compat = r["compat"] or "untested"
         games[r["id"]] = {
             "id":          r["id"],
+            "kind":        "game",                                             # vs "rom" (home page rows)
             "igdb_id":     r["igdb_id"],
             "title":       r["canonical_title"],
             "title_lower": r["canonical_title"].lower(),
@@ -407,7 +411,7 @@ def sidebar_stats():
                 store_labels=STORE_LABELS)
 
 
-@app.route("/")
+@app.route("/games")
 def index():
     q    = request.args.get("q", "").strip()
     sort = request.args.get("sort", "title")
@@ -540,6 +544,7 @@ def api_stats():
 app.register_blueprint(make_roms_blueprint(get_db, games_data))
 app.register_blueprint(make_scans_blueprint(get_db))
 app.register_blueprint(settings.make_blueprint(games_data, lambda: roms.catalog(get_db)))
+app.register_blueprint(home.make_blueprint(games_data, lambda: roms.catalog(get_db)))
 app.register_blueprint(mine.make_blueprint(games_data, lambda: roms.catalog(get_db)))
 
 

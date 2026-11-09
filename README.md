@@ -2,7 +2,7 @@
 
 One searchable library of every game I own or can play, no matter which launcher it lives in. It pulls in Steam, Epic, GOG and Amazon (through Heroic), Lutris, Xbox Game Pass and my ES-DE emulation library, puts it all in one SQLite database, and matches everything to [IGDB](https://www.igdb.com) for genres, themes, ratings, art and time-to-beat. From there you get two ways to use it:
 
-- **A web portal** you can open from any device on your network. Filter by store, genre, theme, mode, rating or length, open a game or ROM page to see "if you liked this" picks, and keep track of what you're playing and how you'd rate it.
+- **A web portal** you can open from any device on your network. It opens on a home page with what to play next and a row of picks for whichever device you're on or whatever itch you want to scratch (retro, relaxing, strategy, sci-fi and so on). The full catalog is a click away: filter by store, genre, theme, mode, rating or length, open a game or ROM page to see "if you liked this" picks, and keep track of what you're playing and how you'd rate it.
 - **An MCP server**, so Claude (or another MCP client) can answer "what should I play tonight?" from what you actually own.
 
 ![The library grid: each card shows the year, IGDB rating, time to beat and every store you have the game on](docs/screenshots/browse.png)

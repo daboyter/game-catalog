@@ -19,7 +19,7 @@
 
     <div class="detail-meta-line">
       {% if game.first_release_year %}
-        <a href="/?decade={{ (game.first_release_year // 10 * 10) ~ 's' }}" title="Games from this decade">{{ game.first_release_year }}</a>
+        <a href="/games?decade={{ (game.first_release_year // 10 * 10) ~ 's' }}" title="Games from this decade">{{ game.first_release_year }}</a>
       {% endif %}
       {% if game.rating and game.rating_count >= min_ratings %}
         <span class="detail-rating" title="IGDB rating from {{ game.rating_count }} ratings">
@@ -28,13 +28,13 @@
       {% endif %}
       {% if developers %}
         <span>
-          {% for d in developers %}<a href="/?developer={{ d|urlencode }}" title="More by this developer">{{ d }}</a>{{ ', ' if not loop.last }}{% endfor %}
+          {% for d in developers %}<a href="/games?developer={{ d|urlencode }}" title="More by this developer">{{ d }}</a>{{ ', ' if not loop.last }}{% endfor %}
         </span>
       {% endif %}
       {% if publishers %}
         <span>
           <span class="dim">published by</span>
-          {% for p in publishers %}<a href="/?publisher={{ p|urlencode }}" title="More from this publisher">{{ p }}</a>{{ ', ' if not loop.last }}{% endfor %}
+          {% for p in publishers %}<a href="/games?publisher={{ p|urlencode }}" title="More from this publisher">{{ p }}</a>{{ ', ' if not loop.last }}{% endfor %}
         </span>
       {% endif %}
     </div>
@@ -45,7 +45,7 @@
         <dt>{{ heading }}</dt>
         <dd>
           {% for v in values %}
-            <a class="genre-tag" href="/?{{ key }}={{ v|urlencode }}" title="All {{ heading|lower }}: {{ v }}">{{ v }}</a>
+            <a class="genre-tag" href="/games?{{ key }}={{ v|urlencode }}" title="All {{ heading|lower }}: {{ v }}">{{ v }}</a>
           {% endfor %}
         </dd>
       {% endfor %}
@@ -74,27 +74,27 @@
       <ul class="ownership-list">
         {% for o in ownerships %}
         <li class="ownership-row">
-          <a href="/?store={{ o.store }}"><span class="store-badge store-{{ o.store }}">{{ store_labels.get(o.store, o.store) }}</span></a>
+          <a href="/games?store={{ o.store }}"><span class="store-badge store-{{ o.store }}">{{ store_labels.get(o.store, o.store) }}</span></a>
           <span class="ownership-title">{{ o.store_title }}</span>
           <span class="ownership-kind kind-{{ o.kind }}">{{ o.kind }}</span>
           {% if o.dd_status %}
             {% set dd_label = {'installable': 'installable', 'findable': "listed, can't install",
                                'missing': 'not available', 'unsure': 'unclear'}[o.dd_status] %}
             <a class="dd-badge dd-{{ o.dd_status }}{{ ' dd-predicted' if o.dd_source == 'predicted' }}"
-               href="/?droid={{ (('Likely installable' if o.dd_source == 'predicted' else 'Installable') if o.dd_status == 'installable'
+               href="/games?droid={{ (('Likely installable' if o.dd_source == 'predicted' else 'Installable') if o.dd_status == 'installable'
                                else ('Not available' if o.dd_status in ('missing', 'findable') else 'Unclear'))|urlencode }}"
                title="{% if o.dd_source == 'predicted' %}Predicted from the Xodus package check; not yet checked on the Odin 2{% else %}Checked on the Odin 2{% if o.dd_checked %} on {{ o.dd_checked }}{% endif %}{% if o.dd_offer %}: {{ o.dd_offer }}{% endif %}{% endif %}">
               DroidDeck: {{ dd_label }}{{ ' (predicted)' if o.dd_source == 'predicted' }}
             </a>
           {% endif %}
           {% if o.dd_status in ('missing', 'findable') and lutris_via %}
-            <a class="dd-lutris" href="/?lutris={{ lutris_via[0]|urlencode }}" title="Not installable on the Odin 2, but it plays on bazzite through the launcher in Lutris">→ play on bazzite via Lutris</a>
+            <a class="dd-lutris" href="/games?lutris={{ lutris_via[0]|urlencode }}" title="Not installable on the Odin 2, but it plays on bazzite through the launcher in Lutris">→ play on bazzite via Lutris</a>
           {% endif %}
           {% if o.store == 'gamepass' and o.platforms %}
             {% if 'cloud' in o.platforms %}
-              <a class="gp-access" href="/?gp=Cloud+streamable" title="In the Game Pass cloud-streaming list: playable through Xbox app cloud gaming on any device">cloud</a>
+              <a class="gp-access" href="/games?gp=Cloud+streamable" title="In the Game Pass cloud-streaming list: playable through Xbox app cloud gaming on any device">cloud</a>
             {% else %}
-              <a class="gp-access gp-windows" href="/?gp=Windows+only" title="Not in the cloud-streaming list: needs a Windows PC">Windows only</a>
+              <a class="gp-access gp-windows" href="/games?gp=Windows+only" title="Not in the cloud-streaming list: needs a Windows PC">Windows only</a>
             {% endif %}
           {% endif %}
           {% if o.is_installed %}<span class="installed-badge">installed</span>{% endif %}
@@ -104,7 +104,7 @@
       </ul>
       {% if lutris_via %}
         <p class="lutris-note">🐧 Plays on bazzite via Lutris
-          ({% for l in lutris_via %}<a href="/?lutris={{ l|urlencode }}">{{ l }}</a>{{ ' / ' if not loop.last }}{% endfor %})</p>
+          ({% for l in lutris_via %}<a href="/games?lutris={{ l|urlencode }}">{{ l }}</a>{{ ' / ' if not loop.last }}{% endfor %})</p>
       {% endif %}
       {% for p in playtime %}
         <p class="playtime dim">
@@ -144,8 +144,8 @@
 {% for s in series_sections %}
 <section class="detail-section series-section">
   <h2>
-    More in <a href="/?series={{ s.name|urlencode }}&sort=oldest">{{ s.name }}</a>
-    {% if s.more > 0 %}<a class="dim series-all" href="/?series={{ s.name|urlencode }}&sort=oldest">+{{ s.more }} more</a>{% endif %}
+    More in <a href="/games?series={{ s.name|urlencode }}&sort=oldest">{{ s.name }}</a>
+    {% if s.more > 0 %}<a class="dim series-all" href="/games?series={{ s.name|urlencode }}&sort=oldest">+{{ s.more }} more</a>{% endif %}
   </h2>
   <ul class="series-row">
     {% for gm in s.games %}
