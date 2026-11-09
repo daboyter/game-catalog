@@ -26,6 +26,9 @@ Picks leave out what every pick row leaves out (⚙ → Recommendations: the
 excluded labels, games marked Complete) and also games marked In progress,
 which are already under Play next.
 
+The left sidebar is the /games grid's filter list, so filtering is one
+click from here; its links open /games.
+
 Any other query string on "/" is an old grid link (/?genre=RPG) and is
 redirected to /games with the same parameters.
 
@@ -450,8 +453,11 @@ def _toggle(param, key):
     return f"/?{urlencode(sorted(args.items()))}#{param}" if args else f"/#{param}"
 
 
-def make_blueprint(games_data, roms_data):
-    """games_data() / roms_data(): app.py's store-game cache and roms.catalog()."""
+def make_blueprint(games_data, roms_data, sidebar_facets):
+    """
+    games_data() / roms_data(): app.py's store-game cache and roms.catalog().
+    sidebar_facets(): the store-game grid's filter sidebar (its links open /games).
+    """
     bp = Blueprint("home", __name__)
 
     @bp.route("/")
@@ -490,7 +496,7 @@ def make_blueprint(games_data, roms_data):
             devices=DEVICES, itches=ITCHES, device=device, itch=itch,
             device_row=_row(DEVICES[device], gc["games"], rc["reps"], cfg, rng) if device else [],
             itch_row=_row(ITCHES[itch], gc["games"], rc["reps"], cfg, rng) if itch else [],
-            toggle=_toggle, system_labels=roms.SYSTEM_LABELS,
+            toggle=_toggle, system_labels=roms.SYSTEM_LABELS, facets=sidebar_facets(),
             find=find, found=found, find_hits=hits or [], find_tangents=tangents or [],
             find_choices=choices, n_tagged=n_tagged, tag_names=voc["names"],
             find_link=lambda name: f"/?{urlencode([*([('for', device)] if device else []), ('find', name)])}#itch",

@@ -16,7 +16,7 @@ facet's filters applied, so a count is what you'd get by ticking it.
 import re
 from collections import Counter
 from urllib.parse import urlencode
-from flask import request
+from flask import g, request
 
 SHOW_TOP = 8      # options shown per facet before "show more"
 PER_PAGE = 200
@@ -62,12 +62,20 @@ def search(items, q):
 
 def params(drop=()):
     """Current query params as (key, value) pairs, minus page and any `drop` keys."""
+    if g.get("browse_target"):          # another page's sidebar: its own params aren't filters
+        return []
     return [(k, v) for k, v in request.args.items(multi=True)
             if k != "page" and k not in drop and v != ""]
 
 
 def url_for_params(pairs):
-    return f"{request.path}?{urlencode(pairs)}" if pairs else request.path
+    """
+    URL of this grid with these params. A page that shows a grid's sidebar
+    without being the grid (the home page) sets g.browse_target = "/games",
+    so its filter links open that grid.
+    """
+    path = g.get("browse_target") or request.path
+    return f"{path}?{urlencode(pairs)}" if pairs else path
 
 
 def toggle_url(facet, value):

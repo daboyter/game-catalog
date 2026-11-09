@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {# Home page (home.py): Play next, then picks by device and by itch. #}
 {% from "_picks.html" import pick_card with context %}
+{% from "_browse.html" import filter_sidebar with context %}
 
 {% block title %}Game Library{% endblock %}
-{% block sidebar %}{% endblock %}
+{# the full catalog's filters; each link opens /games filtered (app.home_facets) #}
+{% block sidebar %}{{ filter_sidebar(facets, 0) }}{% endblock %}
 
 {# A row of cards with a reason line under each: rows of {kind, game, why} #}
 {% macro pick_row(rows) %}

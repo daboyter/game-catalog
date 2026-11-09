@@ -543,7 +543,14 @@ def api_stats():
 app.register_blueprint(make_roms_blueprint(get_db, games_data))
 app.register_blueprint(make_scans_blueprint(get_db))
 app.register_blueprint(settings.make_blueprint(games_data, lambda: roms.catalog(get_db)))
-app.register_blueprint(home.make_blueprint(games_data, lambda: roms.catalog(get_db)))
+def home_facets():
+    """The grid's sidebar, nothing ticked, for the home page (links open /games)."""
+    g.browse_target = "/games"
+    base = mine.annotate(catalog(), "game")
+    return browse.build_facets(base, {}, FACETS, _label, _option_order)
+
+
+app.register_blueprint(home.make_blueprint(games_data, lambda: roms.catalog(get_db), home_facets))
 app.register_blueprint(mine.make_blueprint(games_data, lambda: roms.catalog(get_db)))
 
 
