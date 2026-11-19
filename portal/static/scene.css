@@ -1,0 +1,160 @@
+/*
+  scene.css — the Synthwave backdrop (templates/_scene.html).
+
+  Layers, back to front: sky, two star fields, sun, mountains, neon floor.
+  When you scroll, each moves at its own speed (parallax): stars drift up,
+  the sun sinks behind the mountains, the floor rises toward you.
+  synthwave.js writes the scroll distance into --sy on .scene; nothing else runs.
+
+  Speed notes: every moving part changes only `transform` or `opacity`, which
+  the graphics chip handles without redrawing the page. The floor's "driving"
+  motion is the grid sliding one square and jumping back, forever.
+*/
+
+
+.scene {
+  --sy: 0;                              /* scroll distance in px, from synthwave.js */
+  --horizon: 58vh;                      /* where sky meets floor */
+  --sun: min(40vw, 46vh);               /* sun diameter */
+  display: block;
+  position: fixed; inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #0b0430;
+}
+/* Stack the page ON TOP of the scene instead of tucking the scene behind
+   the page. (Behind the page, some browsers paint the body's background
+   over it and you only see the scene below the last bit of content.) */
+body { background: transparent; }
+html { background: #0b0430; }
+.layout { position: relative; z-index: 1; }
+.scene .layer { position: absolute; will-change: transform; }
+
+/* Sky: deep indigo at the top, purple-magenta at the horizon. */
+.scene .sky {
+  inset: -5vh 0 0 0;
+  background: linear-gradient(to bottom, #0c0538 0%, #1f0868 30%, #4a0b7c 50%, #8a0f8f calc(var(--horizon) - 2vh), #3a0a6a var(--horizon));
+  transform: translateY(max(-3vh, calc(var(--sy) * -0.01px)));
+}
+
+/* Stars: a few dots drawn with gradients, tiled across the sky. */
+.scene .stars {
+  top: 0; left: 0; right: 0;
+  height: calc(var(--horizon) + 20vh);
+  background-image:
+    radial-gradient(1.5px 1.5px at 23px 41px, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 157px 89px, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 91px 173px, #ffe8ff 50%, transparent 51%),
+    radial-gradient(2px 2px at 211px 13px, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 37px 211px, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 190px 150px, #cfe9ff 50%, transparent 51%);
+  background-size: 240px 240px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 85%);
+  mask-image: linear-gradient(to bottom, #000 40%, transparent 85%);
+  animation: twinkle 5s ease-in-out infinite alternate;
+  transform: translateY(max(-14vh, calc(var(--sy) * -0.03px)));
+}
+.scene .stars-2 {
+  background-image:
+    radial-gradient(1px 1px at 60px 120px, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 300px 60px, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 220px 300px, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 340px 220px, #ffd6f5 50%, transparent 51%);
+  background-size: 380px 380px;
+  animation-duration: 7s;
+  animation-delay: -3s;
+  transform: translateY(max(-22vh, calc(var(--sy) * -0.05px)));
+}
+@keyframes twinkle { from { opacity: .55; } to { opacity: 1; } }
+
+/* A shooting star every 11 seconds. */
+.scene .stars-2::after {
+  content: "";
+  position: absolute; top: 12vh; left: 78vw;
+  width: 90px; height: 1.5px;
+  background: linear-gradient(to right, transparent, #fff);
+  transform: rotate(-35deg);
+  opacity: 0;
+  animation: shoot 11s linear infinite 2s;
+}
+@keyframes shoot {
+  0% { opacity: 0; translate: 0 0; }
+  1% { opacity: 1; }
+  5% { opacity: 0; translate: -160px 112px; }
+  100% { opacity: 0; translate: -160px 112px; }
+}
+
+/* Sun: yellow to orange to pink, with the classic stripes cut out of its
+   lower half by a mask. It sinks as you scroll down. */
+.scene .sun-wrap {
+  left: 50%; top: calc(var(--horizon) - var(--sun) * .97);
+  width: var(--sun); height: var(--sun);
+  margin-left: calc(var(--sun) / -2);
+  transform: translateY(min(calc(var(--sun) * .75), calc(var(--sy) * 0.08px)));
+}
+.scene .sun {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: linear-gradient(to bottom, #ffd23f 0%, #ff9a2e 40%, #ff5a3c 65%, #ff2a7a 90%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0 52%, transparent 52% 54.5%, #000 54.5% 60%, transparent 60% 63.5%, #000 63.5% 68%, transparent 68% 72.5%, #000 72.5% 76%, transparent 76% 81.5%, #000 81.5% 84%, transparent 84%);
+  mask-image: linear-gradient(to bottom, #000 0 52%, transparent 52% 54.5%, #000 54.5% 60%, transparent 60% 63.5%, #000 63.5% 68%, transparent 68% 72.5%, #000 72.5% 76%, transparent 76% 81.5%, #000 81.5% 84%, transparent 84%);
+  filter: drop-shadow(0 0 30px rgb(255 60 170 / .7)) saturate(1);
+}
+
+/* Mountains: two ranges in one SVG, sitting on the horizon. */
+.scene .mountains {
+  left: 0; width: 100%;
+  top: calc(var(--horizon) - 10vh); height: 10vh;
+  transform: translateY(max(-5vh, calc(var(--sy) * -0.025px)));
+}
+.scene .mountains .back { fill: #2a0b4a; stroke: #b0249c; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.scene .mountains .front { fill: #16052b; }
+
+/* Floor: a flat grid tilted back in 3D. Taller than the screen so it can
+   rise as you scroll without showing an edge. */
+.scene .floor {
+  left: 0; right: 0; top: var(--horizon); height: calc(100vh - var(--horizon) + 30vh);
+  overflow: hidden;
+  perspective: 320px;
+  perspective-origin: 50% 0;
+  background: linear-gradient(to bottom, #3a0a6a, #1a0648 30%, #0a0326);
+  box-shadow: 0 -1px 0 #ff4fd8, 0 -6px 24px rgb(255 79 216 / .55);
+  transform: translateY(max(-12vh, calc(var(--sy) * -0.06px)));
+}
+.scene .plane {
+  position: absolute; left: -150%; right: -150%; top: 0; height: 400%;
+  transform-origin: 50% 0;
+  background-image:
+    repeating-linear-gradient(to right, rgb(34 232 255 / .7) 0 2px, transparent 2px 56px),
+    repeating-linear-gradient(to bottom, rgb(34 232 255 / .7) 0 2px, transparent 2px 56px);
+  animation: drive 2.6s linear infinite;
+}
+@keyframes drive {
+  from { transform: rotateX(76deg) translateY(-56px); }
+  to   { transform: rotateX(76deg) translateY(0); }
+}
+/* Haze at the horizon so far lines fade into the glow. */
+.scene .floor::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, #3a0a6a 0%, rgb(58 10 106 / .6) 6%, transparent 30%);
+}
+/* The sun's reflection on the floor; fades as the sun sets. */
+.scene .reflection {
+  position: absolute; z-index: 1; top: 0; left: 50%;
+  width: var(--sun); height: 45%;
+  margin-left: calc(var(--sun) / -2);
+  background: radial-gradient(ellipse at 50% 0%, rgb(255 120 80 / .55), rgb(255 40 160 / .2) 45%, transparent 70%);
+  filter: blur(12px);
+  mix-blend-mode: screen;
+  opacity: max(0, calc(1 - var(--sy) * 0.0015));
+}
+
+/* A little darker than the UI Lab version, so text on top stays easy to read. */
+.scene::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgb(4 0 20 / .3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene .plane { transform: rotateX(76deg); }
+}

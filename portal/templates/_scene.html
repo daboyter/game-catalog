@@ -1,0 +1,20 @@
+{#
+  The Synthwave backdrop: five layers stacked back to front, each its own
+  element so it can move at its own speed when you scroll (synthwave.js sets --sy
+  on .scene; scene.css turns it into movement).
+  Everything is CSS gradients plus one small inline SVG: no images.
+#}
+<div class="scene" aria-hidden="true">
+  <div class="layer sky"></div>
+  <div class="layer stars"></div>
+  <div class="layer stars stars-2"></div>
+  <div class="layer sun-wrap"><div class="sun"></div></div>
+  <svg class="layer mountains" viewBox="0 0 1600 200" preserveAspectRatio="none">
+    <polygon class="back" points="0,200 0,120 90,80 170,110 260,40 340,95 420,70 520,120 600,60 700,105 760,85 840,20 930,90 1010,70 1100,115 1180,55 1270,100 1350,75 1440,110 1520,65 1600,95 1600,200"/>
+    <polygon class="front" points="0,200 0,150 120,125 230,160 330,120 450,165 560,135 680,170 800,140 900,165 1020,128 1140,168 1250,138 1370,160 1480,130 1600,155 1600,200"/>
+  </svg>
+  <div class="layer floor">
+    <div class="reflection"></div>
+    <div class="plane"></div>
+  </div>
+</div>

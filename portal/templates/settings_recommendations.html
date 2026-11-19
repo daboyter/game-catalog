@@ -18,7 +18,7 @@
   <p class="dim small">Tunes the pick rows on game and ROM pages: Tangents, Retro Picks, Modern Picks.
     Changes apply on the next page you open. Browsing and filters are never affected.</p>
 
-  {% if notice %}<p class="scan-note">{{ notice }}</p>{% endif %}
+  {% if notice %}<p class="scan-note" data-toast="{{ notice }}">{{ notice }}</p>{% endif %}
   {% if errors %}
     <div class="scan-note warn">Not saved:
       <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
