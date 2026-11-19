@@ -1,0 +1,35 @@
+{#
+  ⌘K quick find (also "/" when you're not typing in a field, or the ⌘K button
+  in the header). Jumps straight to any store game or ROM by title, or to a
+  page. A native <dialog> for the overlay and focus handling; Alpine
+  (x-data="palette", static/synthwave.js) for typing, arrow keys and results.
+  The title list (/search.json) is fetched only the first time it opens.
+#}
+<dialog class="palette" x-data="palette" x-ref="dlg"
+        @open-palette.window="show()" @close="q = ''" @click.self="$refs.dlg.close()">
+  <label class="palette-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input x-ref="input" x-model="q" placeholder="Jump to a game, ROM or page…"
+           @keydown.down.prevent="move(1)" @keydown.up.prevent="move(-1)"
+           @keydown.enter.prevent="choose(results[sel])" autocomplete="off" spellcheck="false"
+           aria-label="Find a game, ROM or page">
+    <kbd>esc</kbd>
+  </label>
+  <ul role="listbox">
+    <template x-for="(r, i) in results" :key="r.key">
+      <li>
+        <template x-if="r.group"><div class="group" x-text="r.group"></div></template>
+        <button type="button" role="option" :aria-selected="i === sel"
+                @mousemove="sel = i" @click="choose(r)">
+          <template x-if="r.cover"><img :src="r.cover" :class="r.rom && 'rom-cover'" alt="" loading="lazy" width="30" height="40"></template>
+          <template x-if="!r.cover"><span class="icon" x-text="r.icon || '·'"></span></template>
+          <span x-html="r.html"></span>
+          <span class="hint" x-text="r.hint"></span>
+        </button>
+      </li>
+    </template>
+    <li x-show="loading" class="group">Loading…</li>
+    <li x-show="!loading && q && !results.length" class="group">Nothing matches “<span x-text="q"></span>”</li>
+  </ul>
+  <footer><span><kbd>↑</kbd> <kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></footer>
+</dialog>

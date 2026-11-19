@@ -13,6 +13,7 @@ Pages
   /games           store games grid (this file)     /game/<id>   game detail
   /roms            ES-DE ROMs grid (roms.py)         /rom/<id>    ROM detail
   /scans           scan health + rescan buttons (scans.py)
+  /search.json     titles for the ⌘K quick-find box (static/synthwave.js)
 
 Browsing model
 --------------
@@ -535,6 +536,27 @@ def game_detail(game_id):
         ttb=ttb,
         min_ratings=MIN_RATINGS,
     )
+
+
+IGDB_COVER = "https://images.igdb.com/igdb/image/upload/"
+
+
+@app.route("/search.json")
+def search_index():
+    """Every store game and ROM card, for the ⌘K quick-find box. Fetched the
+    first time the box opens (about 130 KB gzipped) and cached for an hour.
+    Rows: ["g", id, title, year, cover] and ["r", id, title, year, system, has cover].
+    An IGDB cover is sent as its bare image id ("co1nmw"); the page builds the
+    small-thumbnail URL from it. Other covers (store art) go as full URLs."""
+    def short(url):
+        return url.rsplit("/", 1)[1][:-4] if url and url.startswith(IGDB_COVER) and url.endswith(".jpg") else url or ""
+    data = [["g", gm["id"], gm["title"], gm["year"], short(gm["cover"])] for gm in catalog()]
+    data += [["r", c["id"], c["title"], c["year"], roms.SYSTEM_LABELS.get(c["system"], c["system"]),
+              1 if c["cover"] else 0]
+             for c in roms.catalog(get_db)["cards"] if "Variant only" not in c["f"]["copies"]]
+    resp = jsonify(data)
+    resp.headers["Cache-Control"] = "max-age=3600"
+    return resp
 
 
 @app.route("/api/stats")

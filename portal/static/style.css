@@ -141,6 +141,11 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: .06em; }
 .section-tabs a:hover { color: var(--text); }
 .section-tabs a.active { background: var(--bg3); color: var(--text); box-shadow: inset 0 -2px 0 var(--accent), 0 6px 14px -8px var(--accent); }
 
+/* ⌘K button: opens the quick find. Phones have no keyboard: hidden there. */
+.find-btn { background: none; border: 0; cursor: pointer; padding: 0; display: inline-flex; }
+.find-btn kbd { font-size: .78rem; padding: 3px 7px; transition: color .15s, box-shadow .2s, border-color .15s; }
+.find-btn:hover kbd { color: var(--text); border-color: var(--accent-2); box-shadow: var(--glow-cyan); }
+
 /* Shared form feel: inputs glow cyan when focused, buttons glow pink on hover */
 :is(.search-form, .find-form, .kw-search) input:focus,
 .setting-row input[type=number]:focus,
@@ -657,6 +662,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   .content { padding: 1rem 16px; }
   .site-header { padding: .6rem 16px; flex-wrap: wrap; gap: .5rem; }
   .site-title { font-size: .95rem; }
+  .find-btn { display: none; }
   .search-form { flex-basis: 100%; max-width: none; order: 3; }
   .game-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
   .game-detail { flex-direction: column; }
@@ -762,6 +768,39 @@ input[type=checkbox] { accent-color: var(--accent); }
 .toast.leaving { opacity: 0; transform: translateX(30px); }
 .toast .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); flex: none; }
 @media (max-width: 640px) { .toasts { left: 16px; right: 16px; align-items: stretch; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } }
+
+/* ── ⌘K quick find (templates/_palette.html) ─────────────────────────────── */
+.palette {
+  width: min(640px, 100% - 32px); max-height: min(560px, 80dvh);
+  margin: 12vh auto auto; padding: 0;
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  background: rgb(18 6 56 / .97); color: var(--text);
+  box-shadow: 0 0 30px rgb(255 43 214 / .35), 0 40px 100px -20px rgb(0 0 0 / .8);
+  overflow: hidden;
+}
+.palette::backdrop { background: rgb(4 0 20 / .5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.palette[open] { display: flex; flex-direction: column; animation: pop .18s cubic-bezier(.2, .8, .2, 1); }
+@keyframes pop { from { opacity: 0; transform: scale(.97) translateY(-8px); } }
+.palette-search {
+  display: flex; align-items: center; gap: 10px; flex: none;
+  height: 54px; padding: 0 14px; border-bottom: 1px solid var(--border);
+}
+.palette-search svg { width: 18px; height: 18px; color: var(--accent-2); flex: none; }
+.palette-search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; color: var(--text); font-size: 1rem; }
+.palette ul { list-style: none; margin: 0; padding: 6px; overflow-y: auto; }
+.palette .group { padding: 10px 10px 4px; font: .72rem var(--font-display); text-transform: uppercase; letter-spacing: .12em; color: var(--accent-2); }
+.palette li button {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 8px 10px; border: 0; border-radius: var(--radius-sm);
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.palette li [aria-selected="true"] { background: var(--bg3); box-shadow: inset 3px 0 0 var(--accent); }
+.palette li img { width: 30px; height: 40px; object-fit: cover; border-radius: var(--radius-sm); background: var(--bg3); flex: none; }
+.palette li img.rom-cover { object-fit: contain; }
+.palette .icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--radius-sm); background: var(--bg3); flex: none; color: var(--accent-2); }
+.palette .hint { margin-left: auto; color: var(--text-dim); font-size: .8rem; white-space: nowrap; padding-left: 8px; }
+.palette footer { display: flex; gap: 14px; padding: 9px 14px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: .78rem; }
+.palette mark { background: none; color: var(--accent); font-weight: 700; text-shadow: 0 0 8px rgb(255 43 214 / .6); }
 
 /* ── people who ask for less motion get less motion ──────────────────────── */
 @media (prefers-reduced-motion: reduce) {

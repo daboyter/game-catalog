@@ -19,6 +19,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='scene.css') }}">
   <script defer src="{{ url_for('static', filename='synthwave.js') }}"></script>
+  {# Alpine 3.17.5, only for the ⌘K quick find (templates/_palette.html) #}
+  <script defer src="{{ url_for('static', filename='vendor/alpine.min.js') }}"></script>
   {% block head_extra %}{% endblock %}
 </head>
 <body>
@@ -42,6 +44,8 @@
       {% if q %}<a class="clear-btn" href="{{ request.path }}">✕</a>{% endif %}
     </form>
     <nav class="header-tools">
+      <button class="find-btn" type="button" onclick="dispatchEvent(new Event('open-palette'))"
+              title="Jump to a game, ROM or page (⌘K or /)"><kbd>⌘K</kbd></button>
       {% if scan_problems %}
         <a href="/scans" class="scan-flag" title="{% for p in scan_problems %}{{ p.label }}: {{ p.problem }}&#10;{% endfor %}">
           ⚠ {{ scan_problems|length }} scan{{ 's' if scan_problems|length != 1 }} need{{ 's' if scan_problems|length == 1 }} attention
@@ -82,6 +86,7 @@
     </main>
   </div>
   <div class="toasts" id="toasts" aria-live="polite"></div>
+  {% include "_palette.html" %}
   {# Pull-to-refresh in the home-screen app (Safari tabs have their own). #}
   <script src="{{ url_for('static', filename='refresh.js') }}" defer></script>
 </body>
