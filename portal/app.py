@@ -26,7 +26,7 @@ series / developer / publisher work like sidebar filters but have no
 sidebar section; the game detail page links to them.
 """
 
-import json, pathlib, sqlite3, time
+import gzip, json, pathlib, sqlite3, time
 from flask import Flask, render_template, request, g, abort, jsonify
 
 import browse
@@ -41,6 +41,22 @@ from scans import make_blueprint as make_scans_blueprint
 DB_PATH = pathlib.Path.home() / ".local/share/game-catalog/library.db"
 
 app = Flask(__name__)
+
+
+@app.after_request
+def compress(resp):
+    """Gzip text responses (HTML, CSS, JS, JSON) when the browser accepts it.
+    A grid page shrinks by about 80%, which matters most on a phone away from
+    the house. Images (covers, ROM box art) are already compressed: skipped."""
+    if ("gzip" not in request.headers.get("Accept-Encoding", "")
+            or resp.status_code != 200 or "Content-Encoding" in resp.headers
+            or not resp.mimetype.startswith(("text/", "application/json", "application/javascript"))):
+        return resp
+    resp.direct_passthrough = False          # static files stream by default
+    resp.set_data(gzip.compress(resp.get_data(), compresslevel=6))
+    resp.headers["Content-Encoding"] = "gzip"
+    resp.headers["Vary"] = "Accept-Encoding"
+    return resp
 
 STORE_LABELS = {
     "steam":    "Steam",
