@@ -24,7 +24,7 @@
 
   /* surfaces, back to front */
   --bg:        #120638;                   /* solid fallback behind everything */
-  --bg2:       rgb(20 6 60 / .88);        /* panels: sidebar, cards, sections */
+  --bg2:       rgb(20 6 60 / .72);        /* panels: sidebar, cards, sections */
   --bg3:       rgb(44 15 120 / .72);      /* raised bits: inputs, chips, active rows */
   --border:    #4a2296;
   --text:      #fff0ff;
@@ -162,7 +162,7 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: .06em; }
 
 .sidebar {
   width: 200px; min-width: 200px; padding: 1rem .75rem;
-  background: rgb(14 4 46 / .78); border-right: 1px solid var(--border);
+  background: rgb(14 4 46 / .66); border-right: 1px solid var(--border);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   overflow-y: auto;
