@@ -113,13 +113,17 @@ html { background: #0b0430; }
 /* Floor: a flat grid tilted back in 3D. Taller than the screen so it can
    rise as you scroll without showing an edge.
 
-   The perspective lives inside the grid's own transform (perspective(320px)
-   first in the list), not as `perspective:` on .floor. Safari on iPhone
-   flattens a 3D child of a clipped, moving parent like .floor, which turns
-   the grid into parallel lines instead of lines that meet at the horizon.
-   Built into the transform, the depth is drawn before any flattening.
-   Same look everywhere: the grid tilts from its top center, which is the
-   floor's top center. */
+   Two Safari-on-iPhone rules shape the grid (.plane):
+   - The perspective lives inside its own transform, not as `perspective:`
+     on .floor; iPhone flattens a 3D child of a clipped, moving parent like
+     .floor into parallel lines.
+   - No part of it may come closer than the camera. The grid tilts toward
+     you from the horizon, and a tilted layer whose near end passes the
+     camera (800px, the perspective) is dropped whole on iPhone, where
+     desktop browsers just trim it. So it is 800px long, and at 84.3° its
+     near end stops just short of the camera, still far below the screen.
+   The lines meet about 80px above the horizon (800 / tan 84.3°), behind
+   the mountains and haze. */
 .scene .floor {
   left: 0; right: 0; top: var(--horizon); height: calc(100vh - var(--horizon) + 30vh);
   overflow: hidden;
@@ -128,7 +132,7 @@ html { background: #0b0430; }
   transform: translateY(max(-12vh, calc(var(--sy) * -0.06px)));
 }
 .scene .plane {
-  position: absolute; left: -150%; right: -150%; top: 0; height: 400%;
+  position: absolute; left: -150%; right: -150%; top: 0; height: 800px;
   transform-origin: 50% 0;
   background-image:
     repeating-linear-gradient(to right, rgb(34 232 255 / .7) 0 2px, transparent 2px 56px),
@@ -136,8 +140,8 @@ html { background: #0b0430; }
   animation: drive 2.6s linear infinite;
 }
 @keyframes drive {
-  from { transform: perspective(320px) rotateX(76deg) translateY(-56px); }
-  to   { transform: perspective(320px) rotateX(76deg) translateY(0); }
+  from { transform: perspective(800px) rotateX(84.3deg) translateY(-56px); }
+  to   { transform: perspective(800px) rotateX(84.3deg) translateY(0); }
 }
 /* Haze at the horizon so far lines fade into the glow. */
 .scene .floor::after {
@@ -162,5 +166,5 @@ html { background: #0b0430; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scene .plane { transform: perspective(320px) rotateX(76deg); }
+  .scene .plane { transform: perspective(800px) rotateX(84.3deg); }
 }
