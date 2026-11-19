@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  icon.svg: source for the home-screen icon (apple-touch-icon.png).
-  A white game controller on the portal's purple (the accent color in
-  style.css). The square is full-bleed on purpose: iPhones round the corners
+  icon.svg: source for the home-screen icon (apple-touch-icon.png), the
+  512px app icon and the browser-tab favicon.
+  A tiny copy of the Synthwave scene behind every page (scene.css): night
+  sky, a striped sunset, mountains on the horizon and a cyan neon floor,
+  with the portal's white game controller glowing pink in front of it.
+  The square is full-bleed on purpose: iPhones round the corners
   themselves, and transparent areas would turn black.
   To rebuild the PNGs after editing this file (rsvg-convert comes from
   `brew install librsvg`), from the repo root:
@@ -11,17 +14,80 @@
     rsvg-convert -w 32 -h 32 portal/static/icon.svg -o portal/static/favicon.png
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
-  <rect width="180" height="180" fill="#7c6af7"/>
-  <!-- controller body with its two grips -->
-  <path d="M60 58 H120 C141 58 151 70 156 90 L163 121 C166 138 150 147 139 134 L125 117 H55
-           L41 134 C30 147 14 138 17 121 L24 90 C29 70 39 58 60 58 Z"
-        fill="#ffffff"/>
-  <!-- d-pad -->
-  <rect x="44" y="83" width="28" height="10" rx="2" fill="#7c6af7"/>
-  <rect x="53" y="74" width="10" height="28" rx="2" fill="#7c6af7"/>
-  <!-- four face buttons -->
-  <circle cx="122" cy="76" r="6.5" fill="#7c6af7"/>
-  <circle cx="135" cy="89" r="6.5" fill="#7c6af7"/>
-  <circle cx="109" cy="89" r="6.5" fill="#7c6af7"/>
-  <circle cx="122" cy="102" r="6.5" fill="#7c6af7"/>
+  <defs>
+    <!-- same colors as scene.css -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c0538"/>
+      <stop offset=".35" stop-color="#1f0868"/>
+      <stop offset=".52" stop-color="#4a0b7c"/>
+      <stop offset=".62" stop-color="#8a0f8f"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd23f"/>
+      <stop offset=".45" stop-color="#ff9a2e"/>
+      <stop offset=".75" stop-color="#ff5a3c"/>
+      <stop offset="1" stop-color="#ff2a7a"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a0a6a"/>
+      <stop offset=".35" stop-color="#1a0648"/>
+      <stop offset="1" stop-color="#0a0326"/>
+    </linearGradient>
+    <!-- the sun's stripes: bands cut out of its lower half, thicker toward the horizon -->
+    <mask id="stripes" maskUnits="userSpaceOnUse" x="0" y="0" width="180" height="180">
+      <rect width="180" height="180" fill="#fff"/>
+      <rect x="0" y="72" width="180" height="2.5" fill="#000"/>
+      <rect x="0" y="80" width="180" height="3.5" fill="#000"/>
+      <rect x="0" y="89" width="180" height="4.5" fill="#000"/>
+      <rect x="0" y="99" width="180" height="5.5" fill="#000"/>
+    </mask>
+    <clipPath id="above"><rect width="180" height="112"/></clipPath>
+    <clipPath id="below"><rect y="112" width="180" height="68"/></clipPath>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+      <feFlood flood-color="#ff2bd6"/>
+      <feComposite operator="in" in2="blur" result="pink"/>
+      <feMerge><feMergeNode in="pink"/><feMergeNode in="pink"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- sky, with a few stars -->
+  <rect width="180" height="112" fill="url(#sky)"/>
+  <g fill="#fff">
+    <circle cx="22" cy="18" r="1.2"/><circle cx="57" cy="34" r=".9"/><circle cx="148" cy="14" r="1.3"/>
+    <circle cx="163" cy="44" r=".9"/><circle cx="118" cy="26" r=".8"/><circle cx="12" cy="52" r=".8"/>
+  </g>
+
+  <!-- the sun, setting: only the part above the horizon -->
+  <circle cx="90" cy="70" r="40" fill="url(#sun)" mask="url(#stripes)" clip-path="url(#above)"/>
+
+  <!-- mountains on the horizon -->
+  <polygon points="0,112 0,98 16,90 30,97 46,82 60,95 74,88 90,100 104,86 118,94 134,80 150,93 166,87 180,96 180,112"
+           fill="#2a0b4a" stroke="#b0249c" stroke-width="1.2" stroke-linejoin="round"/>
+  <polygon points="0,112 0,104 22,99 40,106 60,100 82,107 104,101 126,107 148,100 166,105 180,102 180,112" fill="#16052b"/>
+
+  <!-- neon floor: lines fanning out from a point just above the horizon, cross lines bunching up toward it -->
+  <rect y="112" width="180" height="68" fill="url(#floor)"/>
+  <g clip-path="url(#below)" stroke="#22e8ff" stroke-opacity=".75" stroke-width="1.6">
+    <path d="M90 104 L-210 180 M90 104 L-120 180 M90 104 L-30 180 M90 104 L60 180 M90 104 L120 180
+             M90 104 L210 180 M90 104 L300 180 M90 104 L390 180" fill="none"/>
+    <path d="M0 115.5 H180 M0 120 H180 M0 126 H180 M0 134.5 H180 M0 146 H180 M0 162 H180" fill="none"/>
+  </g>
+  <!-- the horizon's pink glow line -->
+  <rect y="111" width="180" height="1.6" fill="#ff4fd8"/>
+
+  <!-- the controller, glowing (same shape as before, smaller, standing on the floor) -->
+  <g transform="translate(90 130) scale(.62) translate(-90 -100)" filter="url(#glow)">
+    <path d="M60 58 H120 C141 58 151 70 156 90 L163 121 C166 138 150 147 139 134 L125 117 H55
+             L41 134 C30 147 14 138 17 121 L24 90 C29 70 39 58 60 58 Z"
+          fill="#ffffff"/>
+    <!-- d-pad -->
+    <rect x="44" y="83" width="28" height="10" rx="2" fill="#2c0f78"/>
+    <rect x="53" y="74" width="10" height="28" rx="2" fill="#2c0f78"/>
+    <!-- four face buttons: pink and cyan, like the page -->
+    <circle cx="122" cy="76" r="6.5" fill="#ff2bd6"/>
+    <circle cx="135" cy="89" r="6.5" fill="#22e8ff"/>
+    <circle cx="109" cy="89" r="6.5" fill="#22e8ff"/>
+    <circle cx="122" cy="102" r="6.5" fill="#ff2bd6"/>
+  </g>
 </svg>
