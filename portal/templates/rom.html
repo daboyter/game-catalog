@@ -11,7 +11,7 @@
 <div class="game-detail">
   <div class="detail-cover-col">
     {% if has_cover %}
-      <img class="detail-cover rom-cover" src="/rom-media/{{ rom.id }}/cover" alt="{{ title }}">
+      <img class="detail-cover rom-cover" src="/rom-media/{{ rom.id }}/cover" alt="{{ title }}" style="view-transition-name: rom-cover-{{ rom.id }}">
     {% else %}
       <div class="detail-cover-placeholder">{{ title[:2] }}</div>
     {% endif %}

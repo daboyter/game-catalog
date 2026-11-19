@@ -20,7 +20,7 @@
   <li class="game-card compat-border-{{ g.compat }}">
     <a href="/game/{{ g.id }}">
       {% if g.cover %}
-        <img class="game-cover" src="{{ g.cover }}" alt="{{ g.title }}" loading="lazy">
+        <img class="game-cover" src="{{ g.cover }}" alt="{{ g.title }}" loading="lazy" style="view-transition-name: cover-{{ g.id }}">
       {% else %}
         <div class="game-cover-placeholder">{{ g.title[:2] }}</div>
       {% endif %}

@@ -27,7 +27,7 @@
   <li class="game-card rom-card">
     <a href="/rom/{{ r.id }}">
       {% if r.cover %}
-        <img class="game-cover rom-cover" src="/rom-media/{{ r.id }}/cover" alt="{{ r.title }}" loading="lazy">
+        <img class="game-cover rom-cover" src="/rom-media/{{ r.id }}/cover" alt="{{ r.title }}" loading="lazy" style="view-transition-name: rom-cover-{{ r.id }}">
       {% else %}
         <div class="game-cover-placeholder">{{ r.title[:2] }}</div>
       {% endif %}

@@ -8,7 +8,8 @@
 <div class="game-detail">
   <div class="detail-cover-col">
     {% if game.cover_url %}
-      <img class="detail-cover" src="{{ game.cover_url }}" alt="{{ game.canonical_title }}">
+      {# same name as its grid card's cover, so the cover flies from the grid to here (style.css) #}
+      <img class="detail-cover" src="{{ game.cover_url }}" alt="{{ game.canonical_title }}" style="view-transition-name: cover-{{ game.id }}">
     {% else %}
       <div class="detail-cover-placeholder">{{ game.canonical_title[:2] }}</div>
     {% endif %}
