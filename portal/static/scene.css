@@ -111,12 +111,18 @@ html { background: #0b0430; }
 .scene .mountains .front { fill: #16052b; }
 
 /* Floor: a flat grid tilted back in 3D. Taller than the screen so it can
-   rise as you scroll without showing an edge. */
+   rise as you scroll without showing an edge.
+
+   The perspective lives inside the grid's own transform (perspective(320px)
+   first in the list), not as `perspective:` on .floor. Safari on iPhone
+   flattens a 3D child of a clipped, moving parent like .floor, which turns
+   the grid into parallel lines instead of lines that meet at the horizon.
+   Built into the transform, the depth is drawn before any flattening.
+   Same look everywhere: the grid tilts from its top center, which is the
+   floor's top center. */
 .scene .floor {
   left: 0; right: 0; top: var(--horizon); height: calc(100vh - var(--horizon) + 30vh);
   overflow: hidden;
-  perspective: 320px;
-  perspective-origin: 50% 0;
   background: linear-gradient(to bottom, #3a0a6a, #1a0648 30%, #0a0326);
   box-shadow: 0 -1px 0 #ff4fd8, 0 -6px 24px rgb(255 79 216 / .55);
   transform: translateY(max(-12vh, calc(var(--sy) * -0.06px)));
@@ -130,8 +136,8 @@ html { background: #0b0430; }
   animation: drive 2.6s linear infinite;
 }
 @keyframes drive {
-  from { transform: rotateX(76deg) translateY(-56px); }
-  to   { transform: rotateX(76deg) translateY(0); }
+  from { transform: perspective(320px) rotateX(76deg) translateY(-56px); }
+  to   { transform: perspective(320px) rotateX(76deg) translateY(0); }
 }
 /* Haze at the horizon so far lines fade into the glow. */
 .scene .floor::after {
@@ -156,5 +162,5 @@ html { background: #0b0430; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scene .plane { transform: rotateX(76deg); }
+  .scene .plane { transform: perspective(320px) rotateX(76deg); }
 }
