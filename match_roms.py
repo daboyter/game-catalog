@@ -94,6 +94,7 @@ SYSTEMS = {
     "segacd":       [78],
     "psx":          [7],
     "ps2":          [8],
+    "xbox":         [11],
     "psp":          [38],
     "atari2600":    [59],
     "apple2":       [75],
